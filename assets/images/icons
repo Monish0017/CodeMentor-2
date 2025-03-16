@@ -1,0 +1,14 @@
+The directory `/codementor-mobile/codementor-mobile/assets/images/icons` is intended to store icon images for the application. Since you haven't specified any particular icons to include, I will create a placeholder file structure for icons. You can later add your actual icon images to this directory.
+
+Here are the contents for the directory:
+
+/codementor-mobile/codementor-mobile/assets/images/icons
+- icon-home.png
+- icon-profile.png
+- icon-settings.png
+- icon-notifications.png
+- icon-leaderboard.png
+- icon-coding.png
+- icon-interview.png
+
+You can create these files as placeholders or replace them with your actual icon images as needed.
