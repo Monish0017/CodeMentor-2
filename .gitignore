@@ -94,3 +94,7 @@ app-example
 
 # Temporary Git conflict files
 *.orig
+
+# Ignore components directory
+/src/components/
+git rm -r --cached src/components/
