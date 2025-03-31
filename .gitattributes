@@ -1,17 +1,22 @@
 # Set default behavior to automatically normalize line endings
 * text=auto
 
-# Force bash scripts to be unix endings
-*.sh text eol=lf
+# Explicitly declare text files you want to always be normalized and converted
+# to native line endings on checkout.
+*.js text
+*.mjs text
+*.cjs text
+*.jsx text
+*.ts text
+*.tsx text
+*.json text
+*.css text
+*.scss text
+*.html text
+*.md text
 
-# Force specific file types to maintain specific line endings
-*.js text eol=lf
-*.jsx text eol=lf
-*.ts text eol=lf
-*.tsx text eol=lf
-*.json text eol=lf
-*.md text eol=lf
-*.svg text eol=lf
+# Declare files that will always have LF line endings on checkout
+*.sh text eol=lf
 
 # Denote all files that are truly binary and should not be modified
 *.png binary
@@ -19,7 +24,7 @@
 *.jpeg binary
 *.gif binary
 *.ico binary
-*.eot binary
-*.ttf binary
 *.woff binary
 *.woff2 binary
+*.ttf binary
+*.eot binary

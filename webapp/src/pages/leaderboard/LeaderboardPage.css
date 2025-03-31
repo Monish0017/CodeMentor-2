@@ -1,0 +1,143 @@
+.leaderboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.leaderboard-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.leaderboard-header h1 {
+  font-size: 28px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.time-filter {
+  display: flex;
+  gap: 8px;
+  background-color: #f0f0f0;
+  padding: 4px;
+  border-radius: 24px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background-color: transparent;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background-color: #6200EE;
+  color: white;
+}
+
+.user-rank-card {
+  background-color: #e8e0ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-rank {
+  font-size: 18px;
+  font-weight: bold;
+  color: #6200EE;
+}
+
+.user-score, .user-problems {
+  font-size: 16px;
+  color: #333;
+}
+
+.leaderboard-table {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-table-header {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 1fr;
+  padding: 16px;
+  background-color: #f7f7f7;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 1px solid #eee;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 1fr;
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.leaderboard-row:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-row:hover {
+  background-color: #f9f9f9;
+}
+
+.leaderboard-row.current-user {
+  background-color: #f2f0ff;
+}
+
+.rank-column {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trophy {
+  font-size: 24px;
+}
+
+.name-column {
+  font-weight: 500;
+}
+
+.problems-column, .score-column {
+  text-align: center;
+}
+
+.score-column {
+  font-weight: bold;
+  color: #6200EE;
+}
+
+.loading-leaderboard {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 18px;
+  color: #666;
+}
+
+@media (max-width: 600px) {
+  .leaderboard-table-header,
+  .leaderboard-row {
+    grid-template-columns: 60px 2fr 1fr;
+  }
+  
+  .problems-column {
+    display: none;
+  }
+}

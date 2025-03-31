@@ -1,0 +1,69 @@
+.notification-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.notification-card {
+  border-left: 4px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.notification-card.unread {
+  border-left-color: #007bff;
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.notification-description {
+  margin-top: 10px;
+  white-space: pre-line;
+}
+
+.notification-footer {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.notification-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.no-notifications {
+  text-align: center;
+  margin: 40px 0;
+  color: #666;
+}
+
+.refresh-button {
+  margin-top: 20px;
+}
+
+.notification-salary {
+  font-weight: 600;
+  color: #28a745;
+}
