@@ -1,113 +1,96 @@
-import axios from 'axios';
+import api from './index';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../config/environment.js';
 
-// Create axios instance with base configuration
-const authApi = axios.create({
-  baseURL: `${API_BASE_URL}/auth`,
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
+const APP_URL = "http://localhost:5000"
 
-// Add interceptor to include auth token in requests
-authApi.interceptors.request.use(
-  async (config) => {
-    const token = await AsyncStorage.getItem('userToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Register a new user
-export const registerUser = async (userData) => {
+export const login = async (email, password) => {
   try {
-    const response = await authApi.post('/register', userData);
+    const response = await api.post(`${APP_URL}/api/auth/login`, { email, password });
     
-    // Store token and user data
-    if (response.data.token) {
-      await AsyncStorage.setItem('userToken', response.data.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(response.data));
-    }
+    // Store auth data
+    await AsyncStorage.setItem('userToken', response.data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
     
-    return response.data;
+    return { success: true, user: response.data.user };
   } catch (error) {
-    if (error.response) {
-      throw error.response.data;
-    } else {
-      throw { message: 'Network error. Please check your connection.' };
-    }
+    console.error('Login error:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Login failed. Please check your credentials and try again.' 
+    };
   }
 };
 
-// Login user with email and password
-export const loginUser = async (credentials) => {
+export const register = async (userData) => {
   try {
-    const response = await authApi.post('/login', credentials);
+    const response = await api.post(`${APP_URL}/api/auth/register`, userData);
     
-    // Store token and user data
-    if (response.data.token) {
-      await AsyncStorage.setItem('userToken', response.data.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(response.data));
-    }
+    // Store auth data
+    await AsyncStorage.setItem('userToken', response.data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
     
-    return response.data;
+    return { success: true, user: response.data.user };
   } catch (error) {
-    if (error.response) {
-      throw error.response.data;
-    } else {
-      throw { message: 'Network error. Please check your connection.' };
-    }
+    console.error('Registration error:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Registration failed. Please try again.' 
+    };
   }
 };
 
-// Google OAuth login
-export const googleLogin = async (idToken) => {
+export const googleAuth = async (googleData, isRegistration = false) => {
   try {
-    const response = await authApi.post('/google', { idToken });
+    // Based on whether this is login or registration
+    const endpoint = isRegistration ? `${APP_URL}/api/auth/register` : `${APP_URL}/api/auth/login`;
     
-    // Store token and user data
-    if (response.data.token) {
-      await AsyncStorage.setItem('userToken', response.data.token);
-      await AsyncStorage.setItem('userData', JSON.stringify(response.data.user));
-    }
+    // Prepare data for API request
+    const data = isRegistration ? {
+      name: googleData.name,
+      email: googleData.email,
+      googleId: googleData.id,
+      profilePicture: googleData.picture,
+      authType: 'google'
+    } : {
+      email: googleData.email,
+      googleId: googleData.id,
+      authType: 'google'
+    };
     
-    return response.data;
+    const response = await api.post(endpoint, data);
+    
+    // Store auth data
+    await AsyncStorage.setItem('userToken', response.data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    
+    return { success: true, user: response.data.user };
   } catch (error) {
-    if (error.response) {
-      throw error.response.data;
-    } else {
-      throw { message: 'Network error. Please check your connection.' };
+    console.error('Google auth error:', error);
+    
+    // Check if this is a "user doesn't exist" error - need to register
+    if (!isRegistration && error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Google account not registered. Please sign up first.',
+        needsRegistration: true,
+        googleData
+      };
     }
+    
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Google authentication failed. Please try again.' 
+    };
   }
 };
 
-// Logout user
-export const logoutUser = async () => {
+export const logout = async () => {
   try {
-    // Clear stored data
     await AsyncStorage.removeItem('userToken');
-    await AsyncStorage.removeItem('userData');
-    
+    await AsyncStorage.removeItem('user');
     return { success: true };
   } catch (error) {
-    throw { message: 'Error during logout process.' };
-  }
-};
-
-// Get current user data
-export const getCurrentUser = async () => {
-  try {
-    const response = await authApi.get('/me');
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      throw error.response.data;
-    } else {
-      throw { message: 'Network error. Please check your connection.' };
-    }
+    console.error('Logout error:', error);
+    return { success: false, error: 'Failed to logout. Please try again.' };
   }
 };

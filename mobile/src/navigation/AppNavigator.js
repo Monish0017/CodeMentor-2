@@ -1,48 +1,45 @@
 import React from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
+
+import DrawerNavigator from './DrawerNavigator';
 import LandingScreen from '../screens/landing/LandingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
-import DrawerNavigator from './DrawerNavigator';
+import InterviewSessionScreen from '../screens/interview/InterviewSessionScreen';
+import { useAuth } from '../context/AuthContext';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-  const { isLoading, userToken } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6200EE" />
-      </View>
-    );
+  if (authLoading) {
+    // We might want to show a loading screen here
+    return null;
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {userToken ? (
-        // User is authenticated
-        <Stack.Screen name="Main" component={DrawerNavigator} />
-      ) : (
-        // User is not authenticated
+    <Stack.Navigator 
+      screenOptions={{ headerShown: false }} 
+      initialRouteName={isAuthenticated ? 'Main' : 'Landing'}
+    >
+      {!isAuthenticated ? (
+        // Auth screens - Landing page is first
         <>
           <Stack.Screen name="Landing" component={LandingScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
         </>
+      ) : (
+        // Main app screens
+        <>
+          <Stack.Screen name="Main" component={DrawerNavigator} />
+          <Stack.Screen name="InterviewSession" component={InterviewSessionScreen} />
+        </>
       )}
     </Stack.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
 
 export default AppNavigator;

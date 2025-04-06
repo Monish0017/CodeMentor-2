@@ -10,7 +10,7 @@ const GoogleAuthCallback = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/google/callback`, {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/google/callback`, {
           withCredentials: true,
         });
 

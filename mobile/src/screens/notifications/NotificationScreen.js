@@ -1,93 +1,153 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Linking, ActivityIndicator, RefreshControl } from 'react-native';
 import ProfileAvatar from '../../components/common/ProfileAvatar';
+import * as notificationAPI from '../../api/notifications';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Server URL configuration - similar to webapp
+const SERVERURL = 'http://localhost:5000'; // Change this to your actual backend URL for production
+
+// Direct API calls to backend
+const notificationDirectApi = {
+  getJobNotifications: async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.get(`${SERVERURL}/api/notifications/job`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        return { success: true, notifications: response.data.data };
+      } else {
+        return { success: false, error: response.data.message || 'Failed to fetch notifications' };
+      }
+    } catch (error) {
+      console.error('Error fetching job notifications:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to load notifications' 
+      };
+    }
+  },
+  
+  markNotificationAsRead: async (notificationId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.put(`${SERVERURL}/api/notifications/job/${notificationId}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        return { success: true };
+      } else {
+        return { success: false, error: response.data.message || 'Failed to mark notification as read' };
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update notification' 
+      };
+    }
+  }
+};
 
 const NotificationScreen = () => {
   const [jobNotifications, setJobNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // This would be replaced with actual LinkedIn API integration
-    fetchJobNotifications();
+    fetchNotifications();
   }, []);
 
-  // Mock function to fetch job notifications - would be replaced with actual API call
-  const fetchJobNotifications = () => {
-    // Simulating API response delay
-    setTimeout(() => {
-      const mockJobData = [
-        {
-          id: '1',
-          company: 'Google',
-          position: 'Frontend Developer',
-          location: 'Mountain View, CA',
-          posted: '2 hours ago',
-          salary: '$120K - $150K',
-          read: false,
-          url: 'https://careers.google.com',
-        },
-        {
-          id: '2',
-          company: 'Microsoft',
-          position: 'Full Stack Engineer',
-          location: 'Redmond, WA',
-          posted: '1 day ago',
-          salary: '$110K - $140K',
-          read: false,
-          url: 'https://careers.microsoft.com',
-        },
-        {
-          id: '3',
-          company: 'Amazon',
-          position: 'Software Development Engineer',
-          location: 'Seattle, WA',
-          posted: '2 days ago',
-          salary: '$115K - $155K',
-          read: true,
-          url: 'https://amazon.jobs',
-        },
-        {
-          id: '4',
-          company: 'Facebook',
-          position: 'React Native Developer',
-          location: 'Menlo Park, CA',
-          posted: '3 days ago',
-          salary: '$125K - $160K',
-          read: true,
-          url: 'https://facebook.com/careers',
-        },
-        {
-          id: '5',
-          company: 'Netflix',
-          position: 'Senior Frontend Engineer',
-          location: 'Los Gatos, CA',
-          posted: '4 days ago',
-          salary: '$140K - $180K',
-          read: false,
-          url: 'https://jobs.netflix.com',
-        },
-      ];
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
       
-      setJobNotifications(mockJobData);
+      // Direct API call to backend
+      const response = await notificationDirectApi.getJobNotifications();
+      
+      if (response.success) {
+        setJobNotifications(response.notifications || []);
+      } else {
+        setError(response.error);
+        // Use sample data as fallback
+        setJobNotifications([
+          {
+            id: '1',
+            company: 'Google',
+            position: 'Frontend Developer',
+            location: 'Mountain View, CA',
+            posted: '2 hours ago',
+            salary: '$120K - $150K',
+            read: false,
+            url: 'https://careers.google.com',
+          },
+          {
+            id: '2',
+            company: 'Microsoft',
+            position: 'Full Stack Engineer',
+            location: 'Redmond, WA',
+            posted: '1 day ago',
+            salary: '$110K - $140K',
+            read: false,
+            url: 'https://careers.microsoft.com',
+          },
+          {
+            id: '3',
+            company: 'Amazon',
+            position: 'Software Development Engineer',
+            location: 'Seattle, WA',
+            posted: '2 days ago',
+            salary: '$115K - $155K',
+            read: true,
+            url: 'https://amazon.jobs',
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      setError('Failed to load job notifications');
+    } finally {
       setLoading(false);
-    }, 1000);
+      setRefreshing(false);
+    }
   };
 
-  const markAsRead = (id) => {
-    setJobNotifications(prev => 
-      prev.map(job => job.id === id ? {...job, read: true} : job)
-    );
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchNotifications();
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      // Direct API call to backend
+      const response = await notificationDirectApi.markNotificationAsRead(id);
+      
+      if (response.success) {
+        setJobNotifications(prev => 
+          prev.map(job => job.id === id ? {...job, read: true} : job)
+        );
+      }
+    } catch (err) {
+      console.error('Error marking notification as read:', err);
+    }
   };
 
   const openJobListing = (job) => {
-    // Mark as read
-    markAsRead(job.id);
+    if (!job.read) {
+      markAsRead(job.id);
+    }
     
-    // Open URL - in a real app, this would navigate to a job details screen
-    // or open the link in an in-app browser
-    Linking.openURL(job.url).catch(err => 
-      console.error('Failed to open URL:', err)
-    );
+    if (job.url) {
+      Linking.openURL(job.url).catch(err => 
+        console.error('Failed to open URL:', err)
+      );
+    }
   };
 
   const renderJobItem = ({ item }) => (
@@ -107,7 +167,7 @@ const NotificationScreen = () => {
         <Text style={styles.positionTitle}>{item.position}</Text>
         <View style={styles.jobMetaContainer}>
           <Text style={styles.jobLocation}>📍 {item.location}</Text>
-          <Text style={styles.jobSalary}>💰 {item.salary}</Text>
+          {item.salary && <Text style={styles.jobSalary}>💰 {item.salary}</Text>}
         </View>
         <Text style={styles.postedTime}>Posted: {item.posted}</Text>
       </View>
@@ -118,7 +178,6 @@ const NotificationScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header styled to match leaderboard/dashboard */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Job Notifications</Text>
         <Text style={styles.headerSubtitle}>
@@ -126,11 +185,18 @@ const NotificationScreen = () => {
         </Text>
       </View>
       
-      {/* Job listings with negative margin to create overlap */}
       <View style={styles.contentContainer}>
-        {loading ? (
+        {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#6200EE" />
             <Text style={styles.loadingText}>Loading job notifications...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={fetchNotifications}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
           </View>
         ) : jobNotifications.length > 0 ? (
           <FlatList
@@ -138,10 +204,16 @@ const NotificationScreen = () => {
             renderItem={renderJobItem}
             keyExtractor={item => item.id}
             contentContainerStyle={styles.jobsList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
           />
         ) : (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No job notifications yet</Text>
+            <Text style={styles.emptySubtext}>
+              We'll notify you when relevant job opportunities become available
+            </Text>
           </View>
         )}
       </View>
@@ -255,6 +327,34 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#999999',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#F44336',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#6200EE',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999999',
+    textAlign: 'center',
+    marginTop: 8,
   },
 });
 

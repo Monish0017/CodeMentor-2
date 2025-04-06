@@ -1,39 +1,33 @@
 {
   "expo": {
     "name": "CodeMentor",
-    "slug": "codementor-mobile-new",
+    "slug": "codementor-mobile",
     "version": "1.0.0",
-    "scheme": "codementor",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#6200EE"
     },
     "assetBundlePatterns": [
-      "assets/icon.png", 
-      "assets/splash.png",
-      "assets/adaptive-icon.png",
-      "assets/favicon.png"
+      "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.codementor.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#6200EE"
+      },
+      "package": "com.codementor.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router"],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "newArchEnabled": true
+    "scheme": "codementor"
   }
 }

@@ -14,6 +14,7 @@ import Assessment from '@mui/icons-material/Assessment';
 import QuestionAnswer from '@mui/icons-material/QuestionAnswer';
 import Check from '@mui/icons-material/Check';
 import axios from 'axios';
+import './InterviewPage.css'; // Import the CSS file
 
 const SERVERURL = 'http://localhost:5000'
 
@@ -246,7 +247,7 @@ const InterviewPage = () => {
   
   // Render the interview setup form
   const renderInterviewSetup = () => (
-    <Paper elevation={3} sx={{ p: 4, my: 4 }}>
+    <Paper elevation={3} className="interview-paper setup-form">
       <Typography variant="h5" gutterBottom>Start a New Interview</Typography>
       
       <Grid container spacing={3} sx={{ mt: 2 }}>
@@ -284,8 +285,7 @@ const InterviewPage = () => {
       <Box textAlign="center" mt={4}>
         <Button 
           variant="contained" 
-          color="primary" 
-          size="large"
+          className="start-button"
           startIcon={<PlayArrow />}
           onClick={startInterview}
           disabled={loading}
@@ -300,9 +300,9 @@ const InterviewPage = () => {
   const renderCurrentQuestion = () => {
     if (!questions || questions.length === 0) {
       return (
-        <Paper elevation={3} sx={{ p: 3, my: 3 }}>
-          <Box display="flex" justifyContent="center" my={2}>
-            <CircularProgress />
+        <Paper elevation={3} className="interview-paper">
+          <Box display="flex" justifyContent="center" my={2} className="loading-container">
+            <CircularProgress className="loading-spinner" />
           </Box>
           <Typography variant="body1" align="center">
             Loading questions...
@@ -314,72 +314,75 @@ const InterviewPage = () => {
     const currentQuestion = questions[currentQuestionIndex];
     
     return (
-      <Paper elevation={3} sx={{ p: 3, my: 3 }}>
-        <Typography variant="overline">
-          Question {currentQuestionIndex + 1} of {questions.length}
-        </Typography>
-        
-        <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
-          {currentQuestion.question}
-        </Typography>
-        
-        <Box mt={3}>
-          <TextField
-            fullWidth
-            multiline
-            rows={6}
-            label="Your Answer"
-            variant="outlined"
-            value={currentAnswer}
-            onChange={(e) => setCurrentAnswer(e.target.value)}
-            disabled={!!answerFeedback}
-          />
-        </Box>
-        
-        <Box display="flex" justifyContent="space-between" mt={3}>
-          <Button 
-            variant="outlined" 
-            color={isRecording ? "error" : "primary"}
-            startIcon={isRecording ? <MicOff /> : <Mic />}
-            onClick={toggleRecording}
-            disabled={!!answerFeedback}
-          >
-            {isRecording ? "Stop Recording" : "Record Answer"}
-          </Button>
+      <Paper elevation={3} className="interview-paper question-paper">
+        <Box p={3}>
+          <Typography variant="overline" className="question-number">
+            Question {currentQuestionIndex + 1} of {questions.length}
+          </Typography>
           
-          {!answerFeedback ? (
+          <Typography variant="h6" gutterBottom className="question-text">
+            {currentQuestion.question}
+          </Typography>
+          
+          <Box mt={3}>
+            <TextField
+              fullWidth
+              multiline
+              rows={6}
+              label="Your Answer"
+              variant="outlined"
+              value={currentAnswer}
+              onChange={(e) => setCurrentAnswer(e.target.value)}
+              disabled={!!answerFeedback}
+              className="answer-field"
+            />
+          </Box>
+          
+          <Box display="flex" justifyContent="space-between" mt={3}>
             <Button 
-              variant="contained" 
-              color="primary"
-              startIcon={<QuestionAnswer />}
-              onClick={submitAnswer}
-              disabled={loading || !currentAnswer.trim()}
+              variant="outlined" 
+              className={isRecording ? "record-button recording" : "record-button"}
+              startIcon={isRecording ? <MicOff /> : <Mic />}
+              onClick={toggleRecording}
+              disabled={!!answerFeedback}
             >
-              Submit Answer
+              {isRecording ? "Stop Recording" : "Record Answer"}
             </Button>
-          ) : (
-            <Button 
-              variant="contained" 
-              color="primary"
-              startIcon={<Check />}
-              onClick={nextQuestion}
-              disabled={currentQuestionIndex >= questions.length - 1}
-            >
-              Next Question
-            </Button>
+            
+            {!answerFeedback ? (
+              <Button 
+                variant="contained" 
+                className="submit-button"
+                startIcon={<QuestionAnswer />}
+                onClick={submitAnswer}
+                disabled={loading || !currentAnswer.trim()}
+              >
+                Submit Answer
+              </Button>
+            ) : (
+              <Button 
+                variant="contained" 
+                className="next-button"
+                startIcon={<Check />}
+                onClick={nextQuestion}
+                disabled={currentQuestionIndex >= questions.length - 1}
+              >
+                Next Question
+              </Button>
+            )}
+          </Box>
+          
+          {answerFeedback && (
+            <Box mt={3} className="feedback-container">
+              <Typography variant="h6" gutterBottom>
+                Feedback (Score: <span className="score">{answerFeedback.score}/10</span>)
+              </Typography>
+              <Typography variant="body1">
+                {answerFeedback.feedback}
+              </Typography>
+            </Box>
           )}
         </Box>
-        
-        {answerFeedback && (
-          <Box mt={3} p={2} bgcolor="rgba(0,0,0,0.03)" borderRadius={1}>
-            <Typography variant="h6" gutterBottom>
-              Feedback (Score: {answerFeedback.score}/10)
-            </Typography>
-            <Typography variant="body1">
-              {answerFeedback.feedback}
-            </Typography>
-          </Box>
-        )}
       </Paper>
     );
   };
@@ -389,50 +392,56 @@ const InterviewPage = () => {
     if (!finalFeedback) return null;
     
     return (
-      <Paper elevation={3} sx={{ p: 3, my: 3 }}>
+      <Paper elevation={3} className="interview-paper final-feedback">
         <Typography variant="h5" gutterBottom align="center">
           Interview Completed
         </Typography>
         
-        <Typography variant="h6" color="primary" align="center" gutterBottom>
+        <Typography variant="h6" className="overall-rating" align="center" gutterBottom>
           Overall Rating: {finalFeedback.overallRating}/10
         </Typography>
         
         <Divider sx={{ my: 2 }} />
         
-        <Typography variant="h6" gutterBottom>
-          Strengths:
-        </Typography>
-        <List>
-          {finalFeedback.strengths.map((strength, idx) => (
-            <ListItem key={idx}>
-              <ListItemText primary={strength} />
-            </ListItem>
-          ))}
-        </List>
+        <div className="feedback-section">
+          <Typography variant="h6" gutterBottom>
+            Strengths:
+          </Typography>
+          <List className="feedback-list">
+            {finalFeedback.strengths.map((strength, idx) => (
+              <ListItem key={idx} className="feedback-item">
+                <ListItemText primary={strength} />
+              </ListItem>
+            ))}
+          </List>
+        </div>
         
-        <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-          Areas for Improvement:
-        </Typography>
-        <List>
-          {finalFeedback.weaknesses.map((weakness, idx) => (
-            <ListItem key={idx}>
-              <ListItemText primary={weakness} />
-            </ListItem>
-          ))}
-        </List>
+        <div className="feedback-section">
+          <Typography variant="h6" gutterBottom>
+            Areas for Improvement:
+          </Typography>
+          <List className="feedback-list">
+            {finalFeedback.weaknesses.map((weakness, idx) => (
+              <ListItem key={idx} className="feedback-item">
+                <ListItemText primary={weakness} />
+              </ListItem>
+            ))}
+          </List>
+        </div>
         
-        <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-          Summary:
-        </Typography>
-        <Typography paragraph>
-          {finalFeedback.summary}
-        </Typography>
+        <div className="feedback-section">
+          <Typography variant="h6" gutterBottom>
+            Summary:
+          </Typography>
+          <Typography paragraph>
+            {finalFeedback.summary}
+          </Typography>
+        </div>
         
-        <Box textAlign="center" mt={3}>
+        <Box textAlign="center">
           <Button 
             variant="contained" 
-            color="primary"
+            className="new-interview-button"
             onClick={() => {
               setIsSessionActive(false);
               setInterview(null);
@@ -456,12 +465,11 @@ const InterviewPage = () => {
     
     return (
       <>
-        <Box mb={2}>
+        <div className="interview-header">
           <Typography variant="h5" gutterBottom>
             {interview?.type || 'Technical'} Interview - {interview?.difficulty || 'Intermediate'} Level
           </Typography>
-          <Divider />
-        </Box>
+        </div>
         
         {renderCurrentQuestion()}
         
@@ -469,7 +477,7 @@ const InterviewPage = () => {
           {allQuestionsAnswered() && !finalFeedback && (
             <Button 
               variant="contained" 
-              color="primary"
+              className="complete-button"
               startIcon={<Assessment />}
               onClick={completeInterview}
               disabled={loading}
@@ -484,22 +492,24 @@ const InterviewPage = () => {
   
   if (loading && !interview) {
     return (
-      <Container maxWidth="md">
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
+      <Container maxWidth="md" className="interview-container">
+        <Box display="flex" justifyContent="center" my={4} className="loading-container">
+          <CircularProgress className="loading-spinner" />
         </Box>
       </Container>
     );
   }
   
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ my: 3 }}>
-        AI Mock Interview
-      </Typography>
+    <Container maxWidth="md" className="interview-container">
+      <div className="interview-header">
+        <Typography variant="h4" component="h1" gutterBottom align="center">
+          AI Mock Interview
+        </Typography>
+      </div>
       
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
+        <div className="error-message">{error}</div>
       )}
       
       {!isSessionActive ? renderInterviewSetup() : renderInterviewProgress()}

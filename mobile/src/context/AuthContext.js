@@ -1,157 +1,88 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { registerUser, loginUser, logoutUser, googleLogin } from '../api/auth';
-import * as Google from 'expo-auth-session/providers/google';
-import Constants from 'expo-constants';
+import axios from 'axios';
 
-const AuthContext = createContext(null);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [userToken, setUserToken] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState(null);
-  const [error, setError] = useState(null);
-
-  // Add Google Auth configuration
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: Constants.manifest.extra.googleClientId, // Make sure to add this to app.config.js or app.json
-    androidClientId: Constants.manifest.extra.androidClientId,
-    iosClientId: Constants.manifest.extra.iosClientId,
-  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const bootstrapAsync = async () => {
+    const checkAuthStatus = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
-        const user = await AsyncStorage.getItem('userData');
+        const token = await AsyncStorage.getItem('token');
+        const storedUserData = await AsyncStorage.getItem('user');
         
-        if (token) {
-          setUserToken(token);
-          setUserData(user ? JSON.parse(user) : null);
+        if (token && storedUserData) {
+          setIsAuthenticated(true);
+          setUserData(JSON.parse(storedUserData));
+        } else {
+          setIsAuthenticated(false);
+          setUserData(null);
         }
-      } catch (e) {
-        console.error('Failed to load auth state:', e);
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthenticated(false);
+        setUserData(null);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    bootstrapAsync();
+    checkAuthStatus();
   }, []);
 
-  const signIn = async (email, password) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const signIn = async (token, user) => {
     try {
-      const response = await loginUser({ email, password });
-      setUserToken(response.token);
-      setUserData(response);
-      return { success: true };
-    } catch (e) {
-      setError(e.message || 'An error occurred during login');
-      return { 
-        success: false, 
-        error: e.message || 'An error occurred during login'
-      };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signUp = async (name, email, password) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await registerUser({ name, email, password });
-      setUserToken(response.token);
-      setUserData(response);
-      return { success: true };
-    } catch (e) {
-      setError(e.message || 'An error occurred during registration');
-      return { 
-        success: false, 
-        error: e.message || 'An error occurred during registration'
-      };
-    } finally {
-      setIsLoading(false);
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+      setUserData(user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error signing in:', error);
+      throw error;
     }
   };
 
   const signOut = async () => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      await logoutUser();
-      setUserToken(null);
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      setIsAuthenticated(false);
       setUserData(null);
-    } catch (e) {
-      // Still clear state even if API call fails
-      setUserToken(null);
-      setUserData(null);
-      setError(e.message || 'An error occurred during logout');
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
     }
   };
 
-  const signInWithGoogle = async () => {
-    setIsLoading(true);
-    setError(null);
-    
+  const updateUserData = async (newUserData) => {
     try {
-      const result = await promptAsync();
-      
-      if (result.type === 'success') {
-        const { authentication } = result;
-        const idToken = authentication.idToken;
-        
-        const response = await googleLogin(idToken);
-        setUserToken(response.token);
-        setUserData(response);
-        return { success: true };
-      } else {
-        return { 
-          success: false, 
-          error: 'Google sign-in was cancelled or failed'
-        };
-      }
-    } catch (e) {
-      setError(e.message || 'An error occurred during Google login');
-      return { 
-        success: false, 
-        error: e.message || 'An error occurred during Google login'
-      };
-    } finally {
-      setIsLoading(false);
+      const updatedUserData = { ...userData, ...newUserData };
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUserData));
+      setUserData(updatedUserData);
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      throw error;
     }
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        isLoading, 
-        userToken, 
-        userData, 
-        error,
-        signIn, 
-        signUp,
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        userData,
+        loading,
+        signIn,
         signOut,
-        signInWithGoogle
+        updateUserData
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);

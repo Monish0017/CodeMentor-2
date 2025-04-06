@@ -1,78 +1,73 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Platform } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const LandingScreen = ({ navigation }) => {
+  const handleLogin = () => {
+    navigation.navigate('Login');
+  };
+
+  const handleRegister = () => {
+    navigation.navigate('Register');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>CodeMentor</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.loginButtonText}>Log In</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.registerButton}
-            onPress={() => navigation.navigate('Register')}
-          >
-            <Text style={styles.registerButtonText}>Register</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.heroSection}>
-          <Text style={styles.heroTitle}>Ace Your Coding Interviews</Text>
-          <Text style={styles.heroSubtitle}>
-            Practice with real interview questions and get better at technical interviews
-          </Text>
-          <TouchableOpacity 
-            style={styles.getStartedButton}
-            onPress={() => navigation.navigate('Register')}
-          >
-            <Text style={styles.getStartedButtonText}>Get Started</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.featureSection}>
-          <Text style={styles.sectionTitle}>Why CodeMentor?</Text>
-          
-          <View style={styles.featureCard}>
-            <View style={styles.featureIcon}>
-              <Text style={styles.featureIconText}>💻</Text>
+      <StatusBar barStyle="light-content" />
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <View style={[styles.background, { backgroundColor: '#6200EE' }]}>
+          <View style={styles.content}>
+            <View style={styles.logoContainer}>
+              <Text style={styles.logoText}>CodeMentor</Text>
+              <Text style={styles.tagline}>Ace your technical interviews</Text>
             </View>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Coding Problems</Text>
-              <Text style={styles.featureDescription}>
-                Practice with hundreds of coding problems, sorted by difficulty and topic
-              </Text>
+
+            <View style={styles.featuresList}>
+              <View style={styles.featureItem}>
+                <View style={styles.featureIconContainer}>
+                  <MaterialIcons name="code" size={24} color="#FFFFFF" />
+                </View>
+                <View style={styles.featureTextContainer}>
+                  <Text style={styles.featureTitle}>Practice Coding Problems</Text>
+                  <Text style={styles.featureDescription}>Solve hundreds of curated problems with detailed explanations</Text>
+                </View>
+              </View>
+
+              <View style={styles.featureItem}>
+                <View style={styles.featureIconContainer}>
+                  <MaterialIcons name="person" size={24} color="#FFFFFF" />
+                </View>
+                <View style={styles.featureTextContainer}>
+                  <Text style={styles.featureTitle}>AI Interview Prep</Text>
+                  <Text style={styles.featureDescription}>Get feedback from AI-powered mock interviews</Text>
+                </View>
+              </View>
+
+              <View style={styles.featureItem}>
+                <View style={styles.featureIconContainer}>
+                  <MaterialIcons name="trending-up" size={24} color="#FFFFFF" />
+                </View>
+                <View style={styles.featureTextContainer}>
+                  <Text style={styles.featureTitle}>Track Progress</Text>
+                  <Text style={styles.featureDescription}>Monitor your improvement with detailed analytics</Text>
+                </View>
+              </View>
             </View>
-          </View>
-          
-          <View style={styles.featureCard}>
-            <View style={styles.featureIcon}>
-              <Text style={styles.featureIconText}>🤖</Text>
-            </View>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>AI-Powered Interviews</Text>
-              <Text style={styles.featureDescription}>
-                Practice with our AI interviewer that adapts to your skill level
-              </Text>
-            </View>
-          </View>
-          
-          <View style={styles.featureCard}>
-            <View style={styles.featureIcon}>
-              <Text style={styles.featureIconText}>📊</Text>
-            </View>
-            <View style={styles.featureContent}>
-              <Text style={styles.featureTitle}>Performance Tracking</Text>
-              <Text style={styles.featureDescription}>
-                Track your progress and identify areas for improvement
-              </Text>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleLogin}
+              >
+                <Text style={styles.loginButtonText}>Log In</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={handleRegister}
+              >
+                <Text style={styles.registerButtonText}>Create Account</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -84,122 +79,96 @@ const LandingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  logo: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#6200EE',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-  },
-  loginButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginRight: 8,
-  },
-  loginButtonText: {
-    color: '#6200EE',
-    fontWeight: '600',
-  },
-  registerButton: {
-    backgroundColor: '#6200EE',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 4,
-  },
-  registerButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  scrollView: {
+    flex: 1,
+    ...(Platform.OS === 'web' && {
+      overflowY: 'auto',
+    }),
   },
   scrollContent: {
-    padding: 20,
+    flexGrow: 1,
   },
-  heroSection: {
+  background: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'space-between',
+  },
+  logoContainer: {
     alignItems: 'center',
-    marginVertical: 40,
+    marginTop: 40,
   },
-  heroTitle: {
-    fontSize: 32,
+  logoText: {
+    fontSize: 36,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-    color: '#333333',
-  },
-  heroSubtitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 24,
-    color: '#666666',
-    lineHeight: 26,
-  },
-  getStartedButton: {
-    backgroundColor: '#6200EE',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 25,
-  },
-  getStartedButtonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
+    marginBottom: 8,
   },
-  featureSection: {
-    marginVertical: 40,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    color: '#333333',
+  tagline: {
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
   },
-  featureCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  featuresList: {
+    marginVertical: 40,
   },
-  featureIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(98, 0, 238, 0.1)',
+  featureItem: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  featureIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
   },
-  featureIconText: {
-    fontSize: 24,
-  },
-  featureContent: {
+  featureTextContainer: {
     flex: 1,
   },
   featureTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333333',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   featureDescription: {
     fontSize: 14,
-    color: '#666666',
-    lineHeight: 20,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  buttonContainer: {
+    marginBottom: 32,
+  },
+  loginButton: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  loginButtonText: {
+    color: '#6200EE',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  registerButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  registerButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

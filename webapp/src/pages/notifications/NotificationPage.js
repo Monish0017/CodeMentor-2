@@ -88,9 +88,15 @@ const NotificationPage = () => {
 
   return (
     <div className="notification-container">
-      <h2>Job Notifications</h2>
+      <div className="notification-header">
+        <h2>Job Notifications</h2>
+      </div>
+      
       {notifications.length === 0 ? (
-        <p className="no-notifications">No job notifications available.</p>
+        <div className="no-notifications">
+          <h4>No job notifications available</h4>
+          <p>Check back later for new job opportunities.</p>
+        </div>
       ) : (
         <div className="notification-list">
           {notifications.map((notification) => (
@@ -99,7 +105,7 @@ const NotificationPage = () => {
               className={`notification-card ${!notification.isRead ? 'unread' : 'read'}`}
             >
               <Card.Body>
-                <div className="notification-header">
+                <div className="notification-header-inner">
                   <Card.Title>{notification.title}</Card.Title>
                   {!notification.isRead && (
                     <Badge bg="primary" pill>New</Badge>
@@ -133,14 +139,6 @@ const NotificationPage = () => {
                   >
                     View Details
                   </Button>
-                  {!notification.isRead && (
-                    <Button 
-                      variant="outline-secondary"
-                      onClick={() => markAsRead(notification._id)}
-                    >
-                      Mark as Read
-                    </Button>
-                  )}
                 </div>
               </Card.Body>
             </Card>
@@ -148,7 +146,7 @@ const NotificationPage = () => {
         </div>
       )}
       <Button 
-        variant="outline-primary" 
+        variant="primary" 
         className="refresh-button"
         onClick={fetchNotifications}
       >

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
   useTheme,
@@ -13,13 +13,28 @@ import {
 } from 'react-native-paper';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext';
 import { useTheme as useAppTheme, themeStyles } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function DrawerContent(props) {
-  const { userToken, userData, signOut } = useAuth();
+  const { userData, signOut } = useAuth();
   const { theme, toggleTheme } = useAppTheme();
   const paperTheme = useTheme();
+  
+  // Handle logout
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      
+      // Navigate to the auth screen
+      props.navigation.reset({
+        index: 0,
+        routes: [{ name: 'Landing' }],
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <DrawerContentScrollView {...props}>
@@ -74,14 +89,14 @@ export default function DrawerContent(props) {
               <MaterialCommunityIcons name="code-tags" color={color} size={size} />
             )}
             label="Coding Problems"
-            onPress={() => props.navigation.navigate('CodingProblems')}
+            onPress={() => props.navigation.navigate('Coding Problems')}
           />
           <DrawerItem
             icon={({ color, size }) => (
               <MaterialCommunityIcons name="account-voice" color={color} size={size} />
             )}
             label="AI Interview"
-            onPress={() => props.navigation.navigate('AIInterview')}
+            onPress={() => props.navigation.navigate('AI Interview')}
           />
           <DrawerItem
             icon={({ color, size }) => (
@@ -110,17 +125,15 @@ export default function DrawerContent(props) {
           </TouchableRipple>
         </Drawer.Section>
 
-        {userToken && (
-          <Drawer.Section>
-            <DrawerItem
-              icon={({ color, size }) => (
-                <MaterialCommunityIcons name="exit-to-app" color={color} size={size} />
-              )}
-              label="Sign Out"
-              onPress={signOut}
-            />
-          </Drawer.Section>
-        )}
+        <Drawer.Section>
+          <DrawerItem
+            icon={({ color, size }) => (
+              <MaterialCommunityIcons name="exit-to-app" color={color} size={size} />
+            )}
+            label="Sign Out"
+            onPress={handleSignOut}
+          />
+        </Drawer.Section>
       </View>
     </DrawerContentScrollView>
   );

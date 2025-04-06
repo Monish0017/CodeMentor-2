@@ -95,7 +95,7 @@
 
 .action-card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 24px;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -104,12 +104,13 @@
   align-items: center;
   color: #333;
   text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .action-card:hover {
+  background-color: #f5f0ff;
   transform: translateY(-5px);
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .action-icon {
@@ -248,10 +249,11 @@
 
 .dashboard-header {
   margin-bottom: 30px;
-  background-color: #6200EE;
+  background: linear-gradient(135deg, #6200EE 0%, #7c4dff 100%);
   padding: 20px;
   border-radius: 8px 8px 0 0;
   color: white;
+  box-shadow: 0 4px 12px rgba(98, 0, 238, 0.2);
 }
 
 .dashboard-header h1 {
@@ -283,6 +285,25 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid #6200EE;
+}
+
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(98, 0, 238, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  z-index: 0;
+}
+
+.stats-value, .stats-label {
+  position: relative;
+  z-index: 1;
 }
 
 .stats-card:hover {
@@ -574,11 +595,12 @@
 }
 
 .dashboard-header {
-  background-color: #6200EE;
+  background: linear-gradient(135deg, #6200EE 0%, #7c4dff 100%);
   padding: 20px;
   border-radius: 8px 8px 0 0;
   color: white;
   margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(98, 0, 238, 0.2);
 }
 
 .dashboard-header h1 {
@@ -607,6 +629,25 @@
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+  border-left: 4px solid #6200EE;
+}
+
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(98, 0, 238, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  z-index: 0;
+}
+
+.stats-value, .stats-label {
+  position: relative;
+  z-index: 1;
 }
 
 .stats-card:hover {
@@ -643,17 +684,18 @@
 
 .action-card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
 }
 
 .action-card:hover {
-  background-color: #f0e6ff;
+  background-color: #f5f0ff;
   transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .action-icon {
@@ -724,4 +766,134 @@
   height: 100vh;
   font-size: 18px;
   color: #6200EE;
+}
+
+/* Challenges Section Styling */
+.challenges-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.challenges-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.challenge-card {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.challenge-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.challenge-icon {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(98, 0, 238, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  color: #6200EE;
+  font-size: 20px;
+}
+
+.challenge-content {
+  flex: 1;
+}
+
+.challenge-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.challenge-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+}
+
+.status-badge.failed {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+}
+
+.language-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #2196F3;
+}
+
+.challenge-stats {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 4px 0;
+}
+
+.challenge-time {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.no-challenges {
+  padding: 30px;
+  text-align: center;
+  background-color: white;
+  border-radius: 8px;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.no-challenges .action-button {
+  margin-top: 16px;
+  max-width: 200px;
+  background-color: #6200EE;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.no-challenges .action-button:hover {
+  background-color: #5000c4;
 }

@@ -221,7 +221,7 @@ const StudentDisplay = () => {
                 >
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar alt={student.name} src={student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}&background=random`} sx={{ mr: 2 }} />
+                      <Avatar alt={student.name} src={student.profile_picture} sx={{ mr: 2 }} />
                       {student.name}
                     </Box>
                   </TableCell>

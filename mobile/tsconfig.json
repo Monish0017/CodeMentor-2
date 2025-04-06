@@ -5,6 +5,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "~/*": [
+        "./src/*"
       ]
     }
   },
@@ -13,7 +16,8 @@
     "**/*.tsx",
     "app/index.js",
     "app/_layout.js",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "App.js"
   ]
 }

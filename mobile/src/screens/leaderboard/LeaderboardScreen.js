@@ -1,28 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import ProfileAvatar from '../../components/common/ProfileAvatar';
-import { getLeaderboard } from '../../api/stats';
+import { leaderboardAPI } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 
 const LeaderboardScreen = () => {
+  const { user } = useAuth();
   const [timeFrame, setTimeFrame] = useState('weekly'); // 'weekly', 'monthly', 'allTime'
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [userRank, setUserRank] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [timeFrame]);
   
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const data = await getLeaderboard(timeFrame);
-      setLeaderboardData(data);
       setError(null);
+      
+      // Get leaderboard data
+      const leaderboardResponse = await leaderboardAPI.getLeaderboard(timeFrame);
+      
+      if (leaderboardResponse.success) {
+        setLeaderboardData(leaderboardResponse.leaderboard);
+      } else {
+        throw new Error('Failed to fetch leaderboard');
+      }
+      
+      // Get user's rank
+      try {
+        const userRankResponse = await leaderboardAPI.getUserRank(timeFrame);
+        if (userRankResponse.success) {
+          setUserRank(userRankResponse);
+        }
+      } catch (err) {
+        console.error('Error fetching user rank:', err);
+        // Not setting error here to still display the leaderboard
+      }
+      
     } catch (err) {
       console.error('Error fetching leaderboard:', err);
       setError('Failed to load leaderboard data');
+      
       // Fallback to sample data if API fails
       setLeaderboardData([
         { id: '1', name: 'John Doe', score: 850, problems: 42, rank: 1 },
@@ -38,21 +57,41 @@ const LeaderboardScreen = () => {
       ]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
   
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [timeFrame]);
+  
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchLeaderboard();
+  };
+  
   // Function to render a leaderboard item
-  const renderItem = ({ item, index }) => (
-    <View style={[styles.leaderboardItem, index < 3 ? styles.topThree : null]}>
-      <Text style={styles.rankText}>{item.rank}</Text>
-      <ProfileAvatar name={item.name} size={40} style={styles.avatar} />
-      <View style={styles.nameContainer}>
-        <Text style={styles.nameText}>{item.name}</Text>
-        <Text style={styles.problemsText}>{item.problems} problems solved</Text>
+  const renderItem = ({ item, index }) => {
+    const isCurrentUser = user && userRank && item.id === userRank.id;
+    
+    return (
+      <View style={[
+        styles.leaderboardItem, 
+        index < 3 ? styles.topThree : null,
+        isCurrentUser ? styles.currentUserItem : null
+      ]}>
+        <Text style={styles.rankText}>{item.rank}</Text>
+        <ProfileAvatar name={item.name} size={40} style={styles.avatar} />
+        <View style={styles.nameContainer}>
+          <Text style={[styles.nameText, isCurrentUser && styles.currentUserText]}>
+            {item.name} {isCurrentUser && '(You)'}
+          </Text>
+          <Text style={styles.problemsText}>{item.problems} problems solved</Text>
+        </View>
+        <Text style={styles.scoreText}>{item.score}</Text>
       </View>
-      <Text style={styles.scoreText}>{item.score}</Text>
-    </View>
-  );
+    );
+  };
   
   return (
     <View style={styles.container}>
@@ -81,7 +120,7 @@ const LeaderboardScreen = () => {
       </View>
       
       <View style={styles.listContainer}>
-        {loading ? (
+        {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#6200EE" />
             <Text style={styles.loadingText}>Loading leaderboard...</Text>
@@ -99,6 +138,17 @@ const LeaderboardScreen = () => {
             renderItem={renderItem}
             keyExtractor={item => item.id}
             contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            ListHeaderComponent={userRank && (
+              <View style={styles.userRankCard}>
+                <Text style={styles.userRankText}>Your Rank: #{userRank.rank}</Text>
+                <Text style={styles.userStatsText}>
+                  Score: {userRank.score} | Problems: {userRank.problems}
+                </Text>
+              </View>
+            )}
           />
         )}
       </View>
@@ -236,6 +286,38 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  currentUserItem: {
+    backgroundColor: 'rgba(98, 0, 238, 0.05)',
+    borderLeftWidth: 5,
+    borderLeftColor: '#6200EE',
+  },
+  currentUserText: {
+    color: '#6200EE',
+  },
+  userRankCard: {
+    backgroundColor: '#6200EE',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4.65,
+    elevation: 6,
+  },
+  userRankText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  userStatsText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
   },
 });
 

@@ -9,6 +9,9 @@ const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  // Material Design default avatar URL
+  const materialDefaultAvatar = "https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&rounded=true&size=128";
+
   useEffect(() => {
     // Check if user is logged in using localStorage
     const token = localStorage.getItem('token');
@@ -24,7 +27,7 @@ const Layout = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setIsAuthenticated(false);
-    navigate('/login');
+    navigate('/');
   };
 
   const handleNavigation = (path) => {
@@ -59,7 +62,7 @@ const Layout = ({ children }) => {
       <div className="main-layout">
         <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
           <div className="sidebar-header">
-            <h2>CodeMentor</h2>
+            <h2>Student Platform</h2>
             <button className="toggle-button" onClick={toggleSidebar}>
               {sidebarOpen ? '◀' : '▶'}
             </button>
@@ -68,10 +71,10 @@ const Layout = ({ children }) => {
           {/* User Profile Section */}
           <div className="user-profile">
             <div className="avatar">
-              {user?.profilePicture ? (
-                <img src={user.profilePicture} alt="Profile" />
+              {user?.profile_picture ? (
+                <img src={user.profile_picture} alt="Profile" />
               ) : (
-                <div className="avatar-placeholder">{user?.name?.charAt(0) || 'U'}</div>
+                <img src={materialDefaultAvatar} alt="Default Profile" className="default-avatar" />
               )}
             </div>
             <div className="user-info">

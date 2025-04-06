@@ -1,25 +1,7 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from "react-native";
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider } from '../src/context/ThemeContext';
-import { AuthProvider } from '../src/context/AuthContext';
-import MainNavigator from '../src/navigation/MainNavigator';
+import { Redirect } from 'expo-router';
 
 export default function Index() {
-  return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <MainNavigator />
-          <StatusBar style="auto" />
-        </AuthProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
-  );
+  // This redirects to the main app, or you can display a loading screen here
+  // Since we're primarily using src/navigation/AppNavigator.js for navigation
+  return <Redirect href="../App" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

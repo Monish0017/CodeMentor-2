@@ -1,117 +1,244 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import axios from 'axios';
+import Constants from 'expo-constants';
+import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { signInWithGoogle, handleWebGoogleSignIn, useGoogleAuth } from '../../utils/googleAuth';
+
+// Server URL configuration - using environment variables
+const SERVERURL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.175.234:5000';
+
+// Direct API calls to backend
+const loginApi = {
+    login: async (email, password) => {
+        try {
+            const response = await axios.post(`${SERVERURL}/api/auth/login`, {
+                email,
+                password
+            });
+            return { success: true, data: response.data };
+        } catch (error) {
+            console.error('Login error:', error.response?.data || error.message);
+            return { 
+                success: false, 
+                error: error.response?.data?.message || 'Invalid credentials, try again.' 
+            };
+        }
+    },
+    
+    googleLogin: async (googleData) => {
+        try {
+            const response = await axios.post(`${SERVERURL}/api/auth/login`, {
+                email: googleData.email,
+                googleId: googleData.sub,
+                authType: 'google'
+            });
+            return { success: true, data: response.data };
+        } catch (error) {
+            console.error('Google login error:', error.response?.data || error.message);
+            return { 
+                success: false, 
+                error: error.response?.data?.message || 'Google login failed.',
+                status: error.response?.status
+            };
+        }
+    }
+};
 
 const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const { signIn } = useAuth();
     
-    const { signIn, signInWithGoogle, error, isLoading } = useAuth();
+    // Use Google auth hook for non-web platforms
+    const { promptAsync, userData: googleUserData, loading: googleLoading, error: googleError } = useGoogleAuth();
 
-    // Update error message when auth context error changes
+    // Handle Google sign-in result
     useEffect(() => {
-        if (error) {
-            setErrorMsg(error);
+        if (googleUserData && !googleLoading) {
+            handleGoogleData(googleUserData);
         }
-    }, [error]);
+    }, [googleUserData, googleLoading]);
+
+    // Handle error from Google sign-in
+    useEffect(() => {
+        if (googleError) {
+            setErrorMsg(googleError);
+        }
+    }, [googleError]);
 
     const handleLogin = async () => {
-        // Basic validation
         if (!email || !password) {
             setErrorMsg('Please enter both email and password');
             return;
         }
         
-        // Clear any previous error
         setErrorMsg('');
+        setIsLoading(true);
         
-        // Call sign in from context
-        const result = await signIn(email, password);
-        
-        if (!result.success) {
-            setErrorMsg(result.error);
+        try {
+            const result = await loginApi.login(email, password);
+            
+            if (result.success) {
+                const { token, user } = result.data;
+                await signIn(token, user);
+                
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Main' }],
+                });
+            } else {
+                setErrorMsg(result.error);
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            setErrorMsg('An unexpected error occurred');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleData = async (userData) => {
+        try {
+            const loginResult = await loginApi.googleLogin(userData);
+            
+            if (loginResult.success) {
+                const { token, user } = loginResult.data;
+                await signIn(token, user);
+                
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Main' }],
+                });
+            } else {
+                if (loginResult.status === 401) {
+                    navigation.navigate('Register', { 
+                        googleData: userData 
+                    });
+                    return;
+                }
+                
+                setErrorMsg(loginResult.error);
+            }
+        } catch (err) {
+            console.error('Google auth data processing error:', err);
+            setErrorMsg('Failed to process Google sign-in data');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleGoogleLogin = async () => {
         try {
-            const result = await signInWithGoogle();
-            if (!result.success) {
-                setErrorMsg(result.error);
+            setErrorMsg('');
+            setIsLoading(true);
+            
+            // Simplify the implementation for now to avoid expo-auth-session issues
+            const googleAuthResult = await signInWithGoogle();
+            
+            if (googleAuthResult.success) {
+                await handleGoogleData(googleAuthResult.userData);
+            } else {
+                setErrorMsg(googleAuthResult.error);
+                setIsLoading(false);
             }
         } catch (err) {
+            console.error('Google sign-in error:', err);
             setErrorMsg('Google sign-in failed. Please try again.');
+            setIsLoading(false);
         }
+    };
+
+    const handleForgotPassword = () => {
+        Alert.alert(
+            "Reset Password",
+            "This feature is coming soon. Please contact support if you need to reset your password.",
+            [{ text: "OK" }]
+        );
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            <TouchableOpacity 
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.backButtonText}>← Back</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.header}>
-                <Text style={styles.title}>Welcome Back</Text>
-                <Text style={styles.subtitle}>Log in to your CodeMentor account</Text>
-            </View>
-            
-            {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
-            
-            <View style={styles.form}>
-                <TextInput 
-                    style={styles.input}
-                    placeholder="Email"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    editable={!isLoading}
-                />
-                <TextInput 
-                    style={styles.input}
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    editable={!isLoading}
-                />
-                
-                <TouchableOpacity style={styles.forgotPassword}>
-                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
-                
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                 <TouchableOpacity 
-                    style={[styles.button, isLoading && styles.buttonDisabled]}
-                    onPress={handleLogin}
-                    disabled={isLoading}
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
                 >
-                    {isLoading ? (
-                        <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                        <Text style={styles.buttonText}>Log In</Text>
-                    )}
+                    <Text style={styles.backButtonText}>← Back</Text>
                 </TouchableOpacity>
                 
-                <TouchableOpacity 
-                    style={styles.googleButton}
-                    onPress={handleGoogleLogin}
-                    disabled={isLoading}
-                >
-                    <Text style={styles.googleButtonText}>Continue with Google</Text>
-                </TouchableOpacity>
-            </View>
-            
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>Don't have an account?</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                    <Text style={styles.link}>Sign Up</Text>
-                </TouchableOpacity>
-            </View>
+                <View style={styles.header}>
+                    <Text style={styles.title}>Welcome Back</Text>
+                    <Text style={styles.subtitle}>Log in to your CodeMentor account</Text>
+                </View>
+                
+                {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+                
+                <View style={styles.form}>
+                    <TextInput 
+                        style={styles.input}
+                        placeholder="Email"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        editable={!isLoading}
+                    />
+                    <TextInput 
+                        style={styles.input}
+                        placeholder="Password"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                        editable={!isLoading}
+                    />
+                    
+                    <TouchableOpacity 
+                        style={styles.forgotPassword}
+                        onPress={handleForgotPassword}
+                    >
+                        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity 
+                        style={[styles.button, isLoading && styles.buttonDisabled]}
+                        onPress={handleLogin}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                            <Text style={styles.buttonText}>Log In</Text>
+                        )}
+                    </TouchableOpacity>
+                    
+                    <View style={styles.divider}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerText}>OR</Text>
+                        <View style={styles.dividerLine} />
+                    </View>
+                    
+                    <TouchableOpacity 
+                        style={styles.googleButton}
+                        onPress={handleGoogleLogin}
+                        disabled={isLoading}
+                    >
+                        <FontAwesome name="google" size={24} color="#4285F4" style={styles.googleIcon} />
+                        <Text style={styles.googleButtonText}>Continue with Google</Text>
+                    </TouchableOpacity>
+                </View>
+                
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>Don't have an account?</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                        <Text style={styles.link}>Sign Up</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };
@@ -120,7 +247,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+    },
+    scrollView: {
+        flex: 1,
+        ...(Platform.OS === 'web' && {
+            overflowY: 'auto',
+        }),
+    },
+    scrollContent: {
         padding: 20,
+        flexGrow: 1,
     },
     backButton: {
         marginTop: 10,
@@ -182,6 +318,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    divider: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#E0E0E0',
+    },
+    dividerText: {
+        marginHorizontal: 10,
+        color: '#757575',
+        fontSize: 14,
+    },
     googleButton: {
         backgroundColor: '#FFFFFF',
         height: 50,
@@ -190,6 +341,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#CCCCCC',
+        flexDirection: 'row',
+    },
+    googleIcon: {
+        marginRight: 10,
     },
     googleButtonText: {
         color: '#666666',

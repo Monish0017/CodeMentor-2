@@ -1,53 +1,91 @@
-import axios from 'axios';
+import api from './index';
 
-const API_BASE_URL = 'https://your-api-url.com/api'; // Replace with your actual API base URL
-
-// Fetch all coding problems
-export const fetchProblems = async () => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/problems`);
-        return response.data;
-    } catch (error) {
-        throw new Error('Error fetching problems: ' + error.message);
-    }
+export const getProblems = async (filters = {}) => {
+  try {
+    // Convert filters to query string
+    const queryParams = new URLSearchParams();
+    if (filters.difficulty) queryParams.append('difficulty', filters.difficulty);
+    if (filters.tags && filters.tags.length) queryParams.append('tags', filters.tags.join(','));
+    if (filters.search) queryParams.append('search', filters.search);
+    
+    const response = await api.get(`/api/problems?${queryParams}`);
+    return { success: true, problems: response.data.problems };
+  } catch (error) {
+    console.error('Error fetching problems:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Failed to fetch problems.' 
+    };
+  }
 };
 
-// Fetch a specific coding problem by ID
-export const fetchProblemById = async (id) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/problems/${id}`);
-        return response.data;
-    } catch (error) {
-        throw new Error('Error fetching problem: ' + error.message);
-    }
+export const getProblem = async (problemId) => {
+  try {
+    const response = await api.get(`/api/problems/${problemId}`);
+    return { success: true, problem: response.data.problem };
+  } catch (error) {
+    console.error('Error fetching problem:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Failed to fetch problem details.' 
+    };
+  }
 };
 
-// Submit code for evaluation
-export const submitCode = async (problemId, code) => {
-    try {
-        const response = await axios.post(`${API_BASE_URL}/problems/${problemId}/submit`, { code });
-        return response.data;
-    } catch (error) {
-        throw new Error('Error submitting code: ' + error.message);
-    }
+export const submitSolution = async (problemId, solution, language) => {
+  try {
+    const response = await api.post('/api/problems/submit', {
+      problemId,
+      solution,
+      language
+    });
+    
+    return { 
+      success: true, 
+      result: response.data.result,
+      executionTime: response.data.executionTime,
+      memory: response.data.memory,
+      status: response.data.status
+    };
+  } catch (error) {
+    console.error('Error submitting solution:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Failed to submit solution.' 
+    };
+  }
 };
 
-// Get solution or hints for a specific problem
-export const getProblemSolution = async (problemId) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/problems/${problemId}/solution`);
-        return response.data;
-    } catch (error) {
-        throw new Error('Error fetching solution: ' + error.message);
-    }
+export const runTestCases = async (problemId, solution, language) => {
+  try {
+    const response = await api.post('/api/problems/test', {
+      problemId,
+      solution,
+      language
+    });
+    
+    return { 
+      success: true, 
+      results: response.data.results
+    };
+  } catch (error) {
+    console.error('Error running test cases:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Failed to run test cases.' 
+    };
+  }
 };
 
-// Fetch a problem from LeetCode
-export const fetchLeetCodeProblem = async (id) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/problems/leetcode/${id}`);
-        return response.data;
-    } catch (error) {
-        throw new Error('Error fetching LeetCode problem: ' + error.message);
-    }
+export const getRecentChallenges = async () => {
+  try {
+    const response = await api.get('/api/problems/recent');
+    return { success: true, recentChallenges: response.data.recentChallenges };
+  } catch (error) {
+    console.error('Error fetching recent challenges:', error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || 'Failed to fetch recent challenges.' 
+    };
+  }
 };

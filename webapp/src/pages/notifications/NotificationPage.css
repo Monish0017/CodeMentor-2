@@ -1,48 +1,144 @@
 .notification-container {
-  padding: 20px;
+  min-height: 100vh;
+  background-color: #f5f5f5;
   max-width: 800px;
   margin: 0 auto;
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.notification-header {
+  background: linear-gradient(135deg, #6200EE 0%, #7c4dff 100%);
+  padding: 20px;
+  border-radius: 8px 8px 0 0;
+  color: white;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(98, 0, 238, 0.2);
+}
+
+.notification-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
 }
 
 .notification-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
   margin: 20px 0;
 }
 
 .notification-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  overflow: hidden;
   border-left: 4px solid #e0e0e0;
-  transition: all 0.3s ease;
+}
+
+.notification-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .notification-card.unread {
-  border-left-color: #007bff;
-  background-color: rgba(0, 123, 255, 0.05);
+  border-left-color: #6200EE;
+  background-color: rgba(98, 0, 238, 0.05);
 }
 
-.notification-header {
+.notification-card .card-body {
+  padding: 20px;
+}
+
+.notification-header-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
 
+.notification-card .card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.notification-card .badge {
+  background-color: #6200EE;
+  font-weight: 500;
+  padding: 6px 10px;
+}
+
+.notification-card .card-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
 .notification-description {
-  margin-top: 10px;
+  margin-top: 12px;
   white-space: pre-line;
+  color: #444;
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+.notification-salary {
+  font-weight: 600;
+  color: #4CAF50;
+  margin: 12px 0;
+  font-size: 16px;
 }
 
 .notification-footer {
   display: flex;
   justify-content: space-between;
   margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+.notification-footer small {
+  font-size: 13px;
+}
+
+.notification-footer .text-danger {
+  color: #f44336 !important;
 }
 
 .notification-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-top: 15px;
+}
+
+.notification-actions .btn-primary {
+  background-color: #6200EE;
+  border-color: #6200EE;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.notification-actions .btn-primary:hover {
+  background-color: #5000c4;
+  border-color: #5000c4;
+}
+
+.notification-actions .btn-outline-secondary {
+  color: #6200EE;
+  border-color: #6200EE;
+  background-color: transparent;
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+.notification-actions .btn-outline-secondary:hover {
+  background-color: rgba(98, 0, 238, 0.1);
+  color: #6200EE;
 }
 
 .notification-loading {
@@ -50,20 +146,79 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200px;
+  height: 300px;
+}
+
+.notification-loading .spinner-border {
+  color: #6200EE;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 16px;
 }
 
 .no-notifications {
   text-align: center;
-  margin: 40px 0;
+  margin: 60px 0;
   color: #666;
+  background-color: white;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .refresh-button {
   margin-top: 20px;
+  background-color: #6200EE;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  margin: 20px auto;
 }
 
-.notification-salary {
-  font-weight: 600;
-  color: #28a745;
+.refresh-button:hover {
+  background-color: #5000c4;
+}
+
+.alert-danger {
+  background-color: #ffebee;
+  color: #d32f2f;
+  border: none;
+  border-left: 4px solid #f44336;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  padding: 16px;
+}
+
+@media (max-width: 576px) {
+  .notification-container {
+    padding: 15px;
+  }
+  
+  .notification-header {
+    padding: 15px;
+  }
+  
+  .notification-header h2 {
+    font-size: 24px;
+  }
+  
+  .notification-card .card-body {
+    padding: 15px;
+  }
+  
+  .notification-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .notification-actions .btn {
+    width: 100%;
+  }
 }
