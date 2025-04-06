@@ -4,7 +4,7 @@ import { Card, Button, Badge, Spinner, Alert } from 'react-bootstrap';
 import { format } from 'date-fns';
 import './NotificationPage.css';
 
-const SERVERURL = 'http://localhost:5000'
+const SERVERURL = 'https://codementor-b244.onrender.com'
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);

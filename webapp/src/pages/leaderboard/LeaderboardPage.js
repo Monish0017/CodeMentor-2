@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './LeaderboardPage.css';
 
-const SERVERURL = 'http://localhost:5000';
+const SERVERURL = 'https://codementor-b244.onrender.com';
 
 const LeaderboardPage = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);

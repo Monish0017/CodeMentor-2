@@ -59,7 +59,7 @@ const LoginPage = () => {
       console.log('Decoded user info:', userInfo);
       
       // Use the standard login endpoint with Google info
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.REACT_APP_API_URL;
       const response = await axios.post(`${apiUrl}/api/auth/login`, {
         email: userInfo.email,
         googleId: userInfo.sub,

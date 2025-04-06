@@ -16,7 +16,7 @@ import Check from '@mui/icons-material/Check';
 import axios from 'axios';
 import './InterviewPage.css'; // Import the CSS file
 
-const SERVERURL = 'http://localhost:5000'
+const SERVERURL = 'https://codementor-b244.onrender.com'
 
 const InterviewPage = () => {
   const navigate = useNavigate();

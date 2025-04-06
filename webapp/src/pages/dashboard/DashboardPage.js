@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './DashboardPage.css';
 
-const SERVERURL = 'http://localhost:5000'
+const SERVERURL = 'https://codementor-b244.onrender.com'
 
 const DashboardPage = () => {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import './ProblemDetailPage.css';
 
-const SERVERURL = 'http://localhost:5000'
+const SERVERURL = 'https://codementor-b244.onrender.com'
 
 const ProblemDetailPage = () => {
   const { problemId } = useParams();

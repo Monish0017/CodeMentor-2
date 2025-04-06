@@ -138,7 +138,7 @@ const RegisterPage = () => {
       
       console.log('Google user info:', decodedInfo);
       
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.REACT_APP_API_URL;
       const response = await axios.post(`${apiUrl}/api/auth/register`, {
         name: decodedInfo.name,
         email: decodedInfo.email,
