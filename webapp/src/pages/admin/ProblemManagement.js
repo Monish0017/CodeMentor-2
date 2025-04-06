@@ -31,7 +31,6 @@ import {
   FormHelperText
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';  // Fixed import
 import AddIcon from '@mui/icons-material/Add';    // Fixed import
 import SearchIcon from '@mui/icons-material/Search';
 import { SERVERURL, getAuthHeader, handleApiError } from '../../utils/api';
@@ -537,12 +536,6 @@ const ProblemManagement = () => {
                         </Grid>
                         <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
                           <IconButton 
-                            color="primary"
-                            sx={{ mr: 1 }}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton 
                             color="error" 
                             onClick={() => handleDeleteClick(problem)}
                           >
@@ -574,7 +567,6 @@ const ProblemManagement = () => {
                 <Grid item xs={12} key={problem._id}>
                   <Card elevation={2}>
                     <CardContent>
-                      {/* Same card content as above */}
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={8}>
                           <Typography variant="h6">{problem.title}</Typography>
@@ -593,12 +585,6 @@ const ProblemManagement = () => {
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
-                          <IconButton 
-                            color="primary"
-                            sx={{ mr: 1 }}
-                          >
-                            <EditIcon />
-                          </IconButton>
                           <IconButton 
                             color="error" 
                             onClick={() => handleDeleteClick(problem)}
@@ -631,7 +617,6 @@ const ProblemManagement = () => {
                 <Grid item xs={12} key={problem._id}>
                   <Card elevation={2}>
                     <CardContent>
-                      {/* Same card content as above */}
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={8}>
                           <Typography variant="h6">{problem.title}</Typography>
@@ -650,12 +635,6 @@ const ProblemManagement = () => {
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
-                          <IconButton 
-                            color="primary"
-                            sx={{ mr: 1 }}
-                          >
-                            <EditIcon />
-                          </IconButton>
                           <IconButton 
                             color="error" 
                             onClick={() => handleDeleteClick(problem)}
@@ -688,7 +667,6 @@ const ProblemManagement = () => {
                 <Grid item xs={12} key={problem._id}>
                   <Card elevation={2}>
                     <CardContent>
-                      {/* Same card content as above */}
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={8}>
                           <Typography variant="h6">{problem.title}</Typography>
@@ -707,12 +685,6 @@ const ProblemManagement = () => {
                           </Typography>
                         </Grid>
                         <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
-                          <IconButton 
-                            color="primary"
-                            sx={{ mr: 1 }}
-                          >
-                            <EditIcon />
-                          </IconButton>
                           <IconButton 
                             color="error" 
                             onClick={() => handleDeleteClick(problem)}

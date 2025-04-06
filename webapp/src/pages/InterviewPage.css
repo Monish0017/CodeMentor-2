@@ -15,12 +15,31 @@
   color: white;
   margin-bottom: 20px;
   box-shadow: 0 4px 12px rgba(98, 0, 238, 0.2);
+  position: relative;
 }
 
 .interview-header h1 {
   margin: 0;
   font-size: 28px;
   font-weight: bold;
+}
+
+/* Timer styles */
+.timer-display {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+  color: white;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.timer-display .timer-icon {
+  margin-right: 6px;
 }
 
 .interview-paper {
@@ -36,6 +55,25 @@
 .question-paper {
   position: relative;
   border-left: 4px solid #6200EE;
+  transition: all 0.3s ease;
+}
+
+/* Question with feedback styling */
+.question-paper.with-feedback {
+  border-radius: 8px;
+  overflow: visible;
+  margin-bottom: 32px;
+}
+
+.question-paper.with-feedback:after {
+  content: '';
+  position: absolute;
+  left: 30px;
+  bottom: -20px;
+  width: 2px;
+  height: 20px;
+  background-color: rgba(98, 0, 238, 0.3);
+  z-index: 1;
 }
 
 .question-number {
@@ -49,12 +87,18 @@
   color: #333;
 }
 
+.answer-field {
+  margin-bottom: 16px;
+}
+
 .answer-field textarea {
   border-color: #6200EE;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .answer-field textarea:focus {
   border-color: #7c4dff;
+  box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.1);
 }
 
 .record-button {
@@ -82,6 +126,183 @@
 }
 
 .feedback-container {
+  background-color: #f9f5ff;
+  border: 1px solid rgba(98, 0, 238, 0.2);
+  border-left: 4px solid #6200EE;
+  padding: 20px;
+  margin: 24px 0 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(98, 0, 238, 0.08);
+  position: relative;
+}
+
+.feedback-container h6 {
+  margin-top: 0;
+  color: #5000c4;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #6200EE;
+  color: white;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 16px;
+  min-width: 60px;
+  margin-left: 8px;
+}
+
+/* Structured feedback format */
+.feedback-content {
+  padding: 0;
+  color: #4a5568;
+  line-height: 1.7;
+  font-size: 15px;
+  white-space: pre-line;
+}
+
+.feedback-content p {
+  margin-bottom: 16px;
+}
+
+.feedback-content ul li,
+.feedback-list li,
+.points-breakdown li,
+.feedback-suggestions li {
+  margin-bottom: 12px;
+  line-height: 1.6;
+  padding-bottom: 8px;
+  padding-left: 16px; /* Add padding to create distance from the margin */
+}
+
+.feedback-content ul li:last-child,
+.feedback-list li:last-child,
+.points-breakdown li:last-child,
+.feedback-suggestions li:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.feedback-section-title {
+  font-weight: 600;
+  color: #6200EE;
+  margin: 16px 0 12px;
+  border-bottom: 1px dashed rgba(98, 0, 238, 0.2);
+  padding-bottom: 8px;
+}
+
+.feedback-highlight {
+  background-color: rgba(98, 0, 238, 0.08);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.feedback-code {
+  background-color: #f1f1f1;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  margin: 12px 0;
+  overflow-x: auto;
+  border-left: 3px solid #6200EE;
+}
+
+/* Feedback label */
+.feedback-label {
+  background-color: #6200EE;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Points breakdown */
+.points-breakdown {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: rgba(98, 0, 238, 0.05);
+  border-radius: 6px;
+}
+
+.points-breakdown ul {
+  margin: 12px 0 0;
+  padding-left: 24px;
+}
+
+.points-breakdown li {
+  margin-bottom: 12px;
+  position: relative;
+  padding-left: 4px;
+}
+
+/* Suggestions section */
+.feedback-suggestions {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #fff8e1;
+  border-radius: 6px;
+  border-left: 3px solid #ffc107;
+}
+
+.feedback-suggestions h4 {
+  margin-top: 0;
+  color: #f57c00;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feedback-suggestions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.feedback-suggestions li {
+  margin-bottom: 6px;
+}
+
+.feedback-suggestions li:last-child {
+  margin-bottom: 0;
+}
+
+/* Better answer section */
+.feedback-better-answer {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #e8f5e9;
+  border-radius: 6px;
+  border-left: 3px solid #4caf50;
+}
+
+.feedback-better-answer h4 {
+  margin-top: 0;
+  color: #2e7d32;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feedback-better-answer p {
+  margin: 0;
+}
+
+.feedback-container {
   background-color: rgba(98, 0, 238, 0.05);
   border-left: 4px solid #6200EE;
   padding: 16px;
@@ -89,27 +310,66 @@
   border-radius: 4px;
 }
 
-.score {
-  color: #6200EE;
-  font-weight: bold;
-}
-
 .final-feedback {
   background-color: white;
   border-radius: 8px;
   padding: 24px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  text-align: left; /* Change from center to left for better readability */
+  line-height: 1.8; /* Improve line spacing for better readability */
 }
 
-.overall-rating {
+.final-feedback .overall-rating {
   color: #6200EE;
   font-size: 32px;
   font-weight: bold;
+  margin-bottom: 16px; /* Add spacing below the rating */
+}
+
+.final-feedback .time-spent {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align to the left */
+  gap: 8px;
+  margin-top: 10px;
+  color: #6200EE;
+  font-size: 16px;
+}
+
+.final-feedback .feedback-section {
+  margin: 24px 0;
+  text-align: left;
+}
+
+.final-feedback .feedback-section h6,
+.final-feedback .feedback-section h3 {
+  color: #6200EE;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.final-feedback .feedback-section ul {
+  padding-left: 20px; /* Add padding for better indentation */
+  margin-top: 8px;
+}
+
+.final-feedback .feedback-section ul li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.final-feedback .feedback-section p {
+  margin-bottom: 16px;
+  white-space: pre-line; /* Ensure proper line breaks for summary text */
+}
+
+.final-feedback .new-interview-button {
+  margin-top: 24px;
+  text-align: center;
 }
 
 .feedback-section {
-  margin: 16px 0;
+  margin: 24px 0;
   text-align: left;
 }
 
@@ -120,12 +380,12 @@
 
 .feedback-list {
   background-color: rgba(98, 0, 238, 0.05);
-  border-radius: 4px;
-  padding: 8px 16px;
+  border-radius: 6px;
+  padding: 16px 20px;
 }
 
 .feedback-item {
-  padding: 8px 0;
+  padding: 12px 0;
   border-bottom: 1px solid rgba(98, 0, 238, 0.1);
 }
 
@@ -229,4 +489,19 @@
   font-weight: 600;
   color: #FF9800;
   margin-bottom: 8px;
+}
+
+/* Time spent in final feedback */
+.time-spent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: #6200EE;
+  font-size: 16px;
+}
+
+.time-spent .time-icon {
+  color: #6200EE;
 }

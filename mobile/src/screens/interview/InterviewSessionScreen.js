@@ -9,7 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View as PlainView } from 'react-native'; // Import regular View for the header
 
 // Server URL configuration
-const SERVERURL = 'http://localhost:5000';
+const SERVERURL = 'https://codementor-b244.onrender.com';
 
 // Direct API calls to backend
 const interviewSessionApi = {

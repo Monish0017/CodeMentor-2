@@ -6,7 +6,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Server URL configuration - similar to webapp
-const SERVERURL = 'http://localhost:5000'; // Change this to your actual backend URL for production
+const SERVERURL = 'https://codementor-b244.onrender.com'; // Change this to your actual backend URL for production
 
 // Direct API calls to backend
 const notificationDirectApi = {

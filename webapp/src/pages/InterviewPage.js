@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Button, Paper, Typography, Box, CircularProgress, 
@@ -13,19 +13,208 @@ import Stop from '@mui/icons-material/Stop';
 import Assessment from '@mui/icons-material/Assessment';
 import QuestionAnswer from '@mui/icons-material/QuestionAnswer';
 import Check from '@mui/icons-material/Check';
+import ThumbUp from '@mui/icons-material/ThumbUp';
+import Lightbulb from '@mui/icons-material/Lightbulb';
+import TipsAndUpdates from '@mui/icons-material/TipsAndUpdates';
+import StarIcon from '@mui/icons-material/Star';
+import ErrorIcon from '@mui/icons-material/Error';
+import TimerIcon from '@mui/icons-material/Timer';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import axios from 'axios';
 import './InterviewPage.css'; // Import the CSS file
 
-const SERVERURL = 'https://codementor-b244.onrender.com'
+const SERVERURL = 'https://codementor-b244.onrender.com';
+
+// Timer component to display elapsed time
+const Timer = ({ isRunning }) => {
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (isRunning) {
+      intervalRef.current = setInterval(() => {
+        setElapsedTime(prevTime => prevTime + 1);
+      }, 1000);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isRunning]);
+
+  const formatTime = (timeInSeconds) => {
+    const hours = Math.floor(timeInSeconds / 3600);
+    const minutes = Math.floor((timeInSeconds % 3600) / 60);
+    const seconds = timeInSeconds % 60;
+    
+    return [
+      hours.toString().padStart(2, '0'),
+      minutes.toString().padStart(2, '0'),
+      seconds.toString().padStart(2, '0')
+    ].join(':');
+  };
+
+  return (
+    <div className="timer-display">
+      <TimerIcon fontSize="small" className="timer-icon" />
+      <span>{formatTime(elapsedTime)}</span>
+    </div>
+  );
+};
+
+// Helper function to parse feedback text
+const parseFeedback = (feedbackText) => {
+  if (!feedbackText) return { score: 0, sections: [] };
+  
+  // Extract score
+  const scoreMatch = feedbackText.match(/Score:\s*(\d+)\/10/);
+  const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+  
+  // Split the feedback into sections
+  let sections = [];
+  
+  // Check for strengths section
+  if (feedbackText.includes("Strengths:")) {
+    const strengthsMatch = feedbackText.match(/\*\*Strengths:\*\*(.*?)(?=\*\*Areas for Improvement:|$)/s);
+    if (strengthsMatch && strengthsMatch[1]) {
+      const strengthsList = strengthsMatch[1].split('*').filter(item => 
+        item.trim() !== '' && !item.includes('Strengths:') && !item.includes('Areas for Improvement:')
+      ).map(item => item.trim());
+      
+      sections.push({
+        type: 'strengths',
+        title: 'Strengths',
+        items: strengthsList.filter(Boolean)
+      });
+    }
+  }
+  
+  // Check for improvement areas
+  if (feedbackText.includes("Areas for Improvement:")) {
+    const improvementMatch = feedbackText.match(/\*\*Areas for Improvement:\*\*(.*?)(?=\*\*Overall:|$)/s);
+    if (improvementMatch && improvementMatch[1]) {
+      const improvementList = improvementMatch[1].split('*').filter(item => 
+        item.trim() !== '' && !item.includes('Areas for Improvement:') && !item.includes('Overall:')
+      ).map(item => item.trim());
+      
+      sections.push({
+        type: 'improvements',
+        title: 'Areas for Improvement',
+        items: improvementList.filter(Boolean)
+      });
+    }
+  }
+  
+  // Check for overall assessment
+  if (feedbackText.includes("Overall:")) {
+    const overallMatch = feedbackText.match(/\*\*Overall:\*\*(.*)/s);
+    if (overallMatch && overallMatch[1]) {
+      sections.push({
+        type: 'overall',
+        title: 'Overall',
+        content: overallMatch[1].trim()
+      });
+    }
+  }
+  
+  // If we couldn't extract structured sections, use the whole text
+  if (sections.length === 0) {
+    // Try to break it into paragraphs at least
+    const paragraphs = feedbackText.split('\n\n').filter(Boolean);
+    
+    if (paragraphs.length > 1) {
+      sections.push({
+        type: 'general',
+        title: 'Feedback',
+        paragraphs: paragraphs
+      });
+    } else {
+      sections.push({
+        type: 'general',
+        title: 'Feedback',
+        content: feedbackText
+      });
+    }
+  }
+  
+  return { score, sections };
+};
+
+// Component to render parsed feedback
+const FormattedFeedback = ({ feedbackText }) => {
+  const { score, sections } = parseFeedback(feedbackText);
+  
+  return (
+    <div className="feedback-content">
+      {sections.map((section, index) => (
+        <div key={index}>
+          {section.type === 'strengths' && (
+            <div className="feedback-section">
+              <h4 className="feedback-section-title">
+                <ThumbUp fontSize="small" style={{ marginRight: '8px', color: '#4caf50' }} />
+                {section.title}
+              </h4>
+              <ul>
+                {section.items.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {section.type === 'improvements' && (
+            <div className="feedback-suggestions">
+              <h4>
+                <TipsAndUpdates fontSize="small" style={{ marginRight: '8px' }} />
+                {section.title}
+              </h4>
+              <ul>
+                {section.items.map((item, idx) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {section.type === 'overall' && (
+            <div className="feedback-overall">
+              <h4 className="feedback-overall-title">
+                <StarIcon fontSize="small" style={{ marginRight: '8px' }} />
+                {section.title}
+              </h4>
+              <p>{section.content}</p>
+            </div>
+          )}
+          
+          {section.type === 'general' && (
+            <div className="feedback-general">
+              <h4 className="feedback-section-title">{section.title}</h4>
+              {section.paragraphs ? 
+                section.paragraphs.map((para, idx) => <p key={idx}>{para}</p>) :
+                <p>{section.content}</p>
+              }
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const InterviewPage = () => {
   const navigate = useNavigate();
   const { sessionId } = useParams(); // Get sessionId from URL parameters
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const timerIntervalRef = useRef(null);
 
   useEffect(() => {
-    // Check if user is logged in via localStorage
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
@@ -46,10 +235,18 @@ const InterviewPage = () => {
     setIsLoading(false);
   }, [navigate]);
 
+  useEffect(() => {
+    // Clean up timer on component unmount
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, []);
+
   const [type, setType] = useState('Technical');
   const [difficulty, setDifficulty] = useState('Intermediate');
   
-  // Interview session states
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [interview, setInterview] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -58,12 +255,9 @@ const InterviewPage = () => {
   const [answerFeedback, setAnswerFeedback] = useState(null);
   const [finalFeedback, setFinalFeedback] = useState(null);
   
-  // UI states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
   
-  // Load existing interview if sessionId is provided
   useEffect(() => {
     if (sessionId) {
       fetchInterview(sessionId);
@@ -75,8 +269,7 @@ const InterviewPage = () => {
       setLoading(true);
       setError('');
       
-      // Connect to the GET /api/interview/:id endpoint
-    const response = await axios.get(`${ SERVERURL }/api/interview/${id}`, {
+      const response = await axios.get(`${SERVERURL}/api/interview/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       
@@ -84,7 +277,6 @@ const InterviewPage = () => {
         setInterview(response.data.interview);
         setIsSessionActive(true);
         
-        // Set questions from the interview
         if (response.data.interview.questions) {
           setQuestions(response.data.interview.questions.map(q => ({
             id: q._id,
@@ -95,7 +287,6 @@ const InterviewPage = () => {
           })));
         }
         
-        // If interview is completed, show final feedback
         if (response.data.interview.status === 'Completed') {
           setFinalFeedback(response.data.interview.feedback);
         }
@@ -113,14 +304,12 @@ const InterviewPage = () => {
       setLoading(true);
       setError('');
       
-      // Connect to the POST /api/interview/start endpoint with proper body format
-      const response = await axios.post(`${ SERVERURL }/api/interview/start`, 
-        { type, difficulty }, // This matches the expected body format in controller
+      const response = await axios.post(`${SERVERURL}/api/interview/start`, 
+        { type, difficulty }, 
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
       );
       
       if (response.data.success) {
-        // Transform questions to the required format if needed
         const formattedQuestions = response.data.questions.map(q => ({
           id: q._id || q.id,
           question: q.question,
@@ -142,6 +331,12 @@ const InterviewPage = () => {
         setAnswerFeedback(null);
         setFinalFeedback(null);
         
+        // Start the timer
+        setElapsedTime(0);
+        setTimerRunning(true);
+        timerIntervalRef.current = setInterval(() => {
+          setElapsedTime(prevTime => prevTime + 1);
+        }, 1000);
       }
     } catch (err) {
       console.error('Error starting interview:', err);
@@ -163,8 +358,7 @@ const InterviewPage = () => {
       
       const currentQuestion = questions[currentQuestionIndex];
       
-      // Connect to the POST /api/interview/submit endpoint with proper body format
-      const response = await axios.post(`${ SERVERURL }/api/interview/submit`, {
+      const response = await axios.post(`${SERVERURL}/api/interview/submit`, {
         interviewId: interview._id,
         questionId: currentQuestion.id,
         answer: currentAnswer
@@ -173,7 +367,6 @@ const InterviewPage = () => {
       });
       
       if (response.data.success) {
-        // Update the current question with feedback
         const updatedQuestions = [...questions];
         updatedQuestions[currentQuestionIndex] = {
           ...updatedQuestions[currentQuestionIndex],
@@ -209,15 +402,24 @@ const InterviewPage = () => {
       setLoading(true);
       setError('');
       
-      // Connect to the POST /api/interview/feedback endpoint with proper body format
-      const response = await axios.post(`${ SERVERURL }/api/interview/feedback`, {
-        interviewId: interview._id
+      // Stop timer
+      setTimerRunning(false);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      
+      const response = await axios.post(`${SERVERURL}/api/interview/feedback`, {
+        interviewId: interview._id,
+        timeSpent: elapsedTime // Send elapsed time to server
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       
       if (response.data.success) {
-        setFinalFeedback(response.data.feedback);
+        setFinalFeedback({
+          ...response.data.feedback,
+          timeSpent: elapsedTime // Store time spent in feedback
+        });
       }
     } catch (err) {
       console.error('Error completing interview:', err);
@@ -227,25 +429,30 @@ const InterviewPage = () => {
     }
   };
   
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    // This would integrate with speech-to-text in a real implementation
-    if (!isRecording) {
-      // Start recording logic would go here
-      console.log('Recording started');
-    } else {
-      // Stop recording and process the result
-      console.log('Recording stopped');
-      // In a real implementation, this would update the currentAnswer state with the transcribed text
-    }
-  };
-  
-  // Helper to check if all questions have been answered
   const allQuestionsAnswered = () => {
     return questions.every(q => q.studentAnswer);
   };
   
-  // Render the interview setup form
+  const formatTime = (timeInSeconds) => {
+    const hours = Math.floor(timeInSeconds / 3600);
+    const minutes = Math.floor((timeInSeconds % 3600) / 60);
+    const seconds = timeInSeconds % 60;
+    
+    let formattedTime = '';
+    
+    if (hours > 0) {
+      formattedTime += `${hours} hour${hours > 1 ? 's' : ''} `;
+    }
+    
+    if (minutes > 0 || hours > 0) {
+      formattedTime += `${minutes} minute${minutes > 1 ? 's' : ''} `;
+    }
+    
+    formattedTime += `${seconds} second${seconds > 1 ? 's' : ''}`;
+    
+    return formattedTime;
+  };
+
   const renderInterviewSetup = () => (
     <Paper elevation={3} className="interview-paper setup-form">
       <Typography variant="h5" gutterBottom>Start a New Interview</Typography>
@@ -296,7 +503,6 @@ const InterviewPage = () => {
     </Paper>
   );
   
-  // Render the current question
   const renderCurrentQuestion = () => {
     if (!questions || questions.length === 0) {
       return (
@@ -312,9 +518,10 @@ const InterviewPage = () => {
     }
     
     const currentQuestion = questions[currentQuestionIndex];
+    const hasSubmittedAnswer = !!answerFeedback;
     
     return (
-      <Paper elevation={3} className="interview-paper question-paper">
+      <Paper elevation={3} className={`interview-paper question-paper ${hasSubmittedAnswer ? 'with-feedback' : ''}`}>
         <Box p={3}>
           <Typography variant="overline" className="question-number">
             Question {currentQuestionIndex + 1} of {questions.length}
@@ -338,17 +545,7 @@ const InterviewPage = () => {
             />
           </Box>
           
-          <Box display="flex" justifyContent="space-between" mt={3}>
-            <Button 
-              variant="outlined" 
-              className={isRecording ? "record-button recording" : "record-button"}
-              startIcon={isRecording ? <MicOff /> : <Mic />}
-              onClick={toggleRecording}
-              disabled={!!answerFeedback}
-            >
-              {isRecording ? "Stop Recording" : "Record Answer"}
-            </Button>
-            
+          <Box display="flex" justifyContent="flex-end" mt={3}>
             {!answerFeedback ? (
               <Button 
                 variant="contained" 
@@ -374,12 +571,15 @@ const InterviewPage = () => {
           
           {answerFeedback && (
             <Box mt={3} className="feedback-container">
-              <Typography variant="h6" gutterBottom>
-                Feedback (Score: <span className="score">{answerFeedback.score}/10</span>)
-              </Typography>
-              <Typography variant="body1">
-                {answerFeedback.feedback}
-              </Typography>
+              {answerFeedback.score && (
+                <h6>
+                  <Assessment fontSize="small" style={{ verticalAlign: 'middle' }} />
+                  Feedback Assessment
+                  <span className="score">{answerFeedback.score}/10</span>
+                </h6>
+              )}
+              
+              <FormattedFeedback feedbackText={answerFeedback.feedback} />
             </Box>
           )}
         </Box>
@@ -387,7 +587,6 @@ const InterviewPage = () => {
     );
   };
   
-  // Render the final feedback
   const renderFinalFeedback = () => {
     if (!finalFeedback) return null;
     
@@ -400,6 +599,13 @@ const InterviewPage = () => {
         <Typography variant="h6" className="overall-rating" align="center" gutterBottom>
           Overall Rating: {finalFeedback.overallRating}/10
         </Typography>
+        
+        <div className="time-spent">
+          <AccessTimeIcon className="time-icon" />
+          <Typography variant="subtitle1">
+            Time Spent: {formatTime(finalFeedback.timeSpent || elapsedTime)}
+          </Typography>
+        </div>
         
         <Divider sx={{ my: 2 }} />
         
@@ -434,7 +640,7 @@ const InterviewPage = () => {
             Summary:
           </Typography>
           <Typography paragraph>
-            {finalFeedback.summary}
+            {finalFeedback.summary.replace(/\*\*/g, '')} {/* Remove ** from the summary */}
           </Typography>
         </div>
         
@@ -457,7 +663,6 @@ const InterviewPage = () => {
     );
   };
   
-  // Render interview progress
   const renderInterviewProgress = () => {
     if (finalFeedback) {
       return renderFinalFeedback();
@@ -469,6 +674,7 @@ const InterviewPage = () => {
           <Typography variant="h5" gutterBottom>
             {interview?.type || 'Technical'} Interview - {interview?.difficulty || 'Intermediate'} Level
           </Typography>
+          <Timer isRunning={timerRunning} />
         </div>
         
         {renderCurrentQuestion()}
@@ -509,7 +715,10 @@ const InterviewPage = () => {
       </div>
       
       {error && (
-        <div className="error-message">{error}</div>
+        <div className="error-message">
+          <ErrorIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          {error}
+        </div>
       )}
       
       {!isSessionActive ? renderInterviewSetup() : renderInterviewProgress()}

@@ -6,7 +6,7 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { signInWithGoogle, handleWebGoogleSignIn, useGoogleAuth } from '../../utils/googleAuth';
+import { signInWithGoogle } from '../../utils/googleAuth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Server URL configuration - using environment variables
@@ -95,9 +95,6 @@ const RegisterScreen = ({ navigation, route }) => {
     const { signIn } = useAuth();
     const googleData = route.params?.googleData;
     
-    // Use the Google auth hook
-    const { promptAsync, userData: googleUserData, loading: googleLoading, error: googleError } = useGoogleAuth();
-    
     const [name, setName] = useState(googleData?.name || '');
     const [email, setEmail] = useState(googleData?.email || '');
     const [password, setPassword] = useState('');
@@ -107,22 +104,11 @@ const RegisterScreen = ({ navigation, route }) => {
     const [profileImage, setProfileImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(googleData?.picture || null);
     
-    // Handle Google authentication callback response
     useEffect(() => {
-        if (googleUserData && !googleLoading) {
-            setName(googleUserData.name || '');
-            setEmail(googleUserData.email || '');
-            setImagePreview(googleUserData.picture || null);
-            handleGoogleRegister(googleUserData);
+        if (route.params?.googleAuthPending) {
+            setErrorMsg('Please complete Google authentication to continue');
         }
-    }, [googleUserData, googleLoading]);
-    
-    // Show Google auth errors
-    useEffect(() => {
-        if (googleError) {
-            setErrorMsg(googleError);
-        }
-    }, [googleError]);
+    }, [route.params?.googleAuthPending]);
     
     const pickImage = async () => {
         try {
@@ -202,60 +188,55 @@ const RegisterScreen = ({ navigation, route }) => {
         }
     };
 
-    const handleGoogleRegister = async (userData) => {
-        // Only proceed if we have the user data
-        if (!userData) return;
-        
-        try {
-            setIsLoading(true);
-            setErrorMsg('');
-            
-            const result = await registerApi.googleRegister(userData);
-            
-            if (result.success) {
-                const { token, user } = result.data;
-                await signIn(token, user);
-                
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Main' }],
-                });
-            } else {
-                setErrorMsg(result.error);
-            }
-        } catch (err) {
-            console.error('Google registration error:', err);
-            setErrorMsg('Google registration failed. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleGoogleSignup = async () => {
         try {
             if (googleData) {
-                await handleGoogleRegister(googleData);
+                setIsLoading(true);
+                
+                const result = await registerApi.googleRegister(googleData);
+                
+                if (result.success) {
+                    const { token, user } = result.data;
+                    await signIn(token, user);
+                    
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Main' }],
+                    });
+                } else {
+                    setErrorMsg(result.error);
+                }
+                
+                setIsLoading(false);
                 return;
             }
             
             setErrorMsg('');
             setIsLoading(true);
             
-            // Simplify the implementation for now to avoid expo-auth-session issues
             const googleAuthResult = await signInWithGoogle();
             
             if (googleAuthResult.success) {
-                setName(googleAuthResult.userData.name || '');
-                setEmail(googleAuthResult.userData.email || '');
-                setImagePreview(googleAuthResult.userData.picture || null);
-                await handleGoogleRegister(googleAuthResult.userData);
+                const registerResult = await registerApi.googleRegister(googleAuthResult.userData);
+                
+                if (registerResult.success) {
+                    const { token, user } = registerResult.data;
+                    await signIn(token, user);
+                    
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Main' }],
+                    });
+                } else {
+                    setErrorMsg(registerResult.error);
+                }
             } else {
                 setErrorMsg(googleAuthResult.error);
-                setIsLoading(false);
             }
         } catch (err) {
             console.error('Google sign-up error:', err);
             setErrorMsg('Google sign-up failed. Please try again.');
+        } finally {
             setIsLoading(false);
         }
     };

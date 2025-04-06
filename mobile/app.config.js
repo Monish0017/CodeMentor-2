@@ -30,9 +30,12 @@ module.exports = {
     favicon: "./assets/favicon.png"
   },
   extra: {
-    API_URL: process.env.API_URL || "http://localhost:5000",
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID_HERE"
+    API_URL: process.env.API_URL || "http://192.168.175.234:5000",
+    // Add default client IDs for easy development (replace with real ones in production)
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com",
+    GOOGLE_ANDROID_CLIENT_ID: process.env.GOOGLE_ANDROID_CLIENT_ID || "123456789012-abcdefghijklmnopqrstuvwxyzandroid.apps.googleusercontent.com",
+    GOOGLE_IOS_CLIENT_ID: process.env.GOOGLE_IOS_CLIENT_ID || "123456789012-abcdefghijklmnopqrstuvwxyzios.apps.googleusercontent.com",
+    useGoogleAuth: false // Set to true when you have real client IDs
   },
-  // Remove plugins section as we're not using config plugins
-  scheme: "codementor" // Important for deep linking and auth redirects
+  scheme: "codementor"
 };

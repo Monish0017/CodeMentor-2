@@ -26,7 +26,6 @@ import {
   CircularProgress
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';   // Fixed import
 import AddIcon from '@mui/icons-material/Add';     // Fixed import
 import SearchIcon from '@mui/icons-material/Search'; // Fixed import
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -322,12 +321,6 @@ const NotificationManagement = () => {
                       />
                     </Grid>
                     <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
-                      <IconButton 
-                        color="primary"
-                        sx={{ mr: 1 }}
-                      >
-                        <EditIcon />
-                      </IconButton>
                       <IconButton 
                         color="error" 
                         onClick={() => handleDeleteClick(notification)}

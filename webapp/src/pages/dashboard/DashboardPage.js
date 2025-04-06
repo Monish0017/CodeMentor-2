@@ -18,7 +18,6 @@ const DashboardPage = () => {
   const [userStats, setUserStats] = useState({
     problemsSolved: 0,
     interviewsCompleted: 0,
-    streak: 0,
     rank: 0
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -202,10 +201,6 @@ const DashboardPage = () => {
                 <p className="stats-label">Interviews</p>
               </div>
               <div className="stats-card">
-                <h2 className="stats-value">{userStats.streak}</h2>
-                <p className="stats-label">Day Streak</p>
-              </div>
-              <div className="stats-card">
                 <h2 className="stats-value">#{userStats.rank}</h2>
                 <p className="stats-label">Ranking</p>
               </div>
@@ -236,9 +231,6 @@ const DashboardPage = () => {
         <div className="section">
           <div className="interviews-header">
             <h2 className="section-title">Recent Interviews</h2>
-            <button onClick={handleRefreshInterviews} className="refresh-button" disabled={isLoadingInterviews}>
-              {isLoadingInterviews ? 'Loading...' : 'Refresh'}
-            </button>
           </div>
           
           {interviewsError && (
@@ -294,9 +286,6 @@ const DashboardPage = () => {
         <div className="section">
           <div className="challenges-header">
             <h2 className="section-title">Recent Coding Challenges</h2>
-            <button onClick={handleRefreshChallenges} className="refresh-button" disabled={isLoadingChallenges}>
-              {isLoadingChallenges ? 'Loading...' : 'Refresh'}
-            </button>
           </div>
           
           {challengesError && (

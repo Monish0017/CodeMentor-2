@@ -37,7 +37,6 @@ const menuItems = [
   { text: 'Students', icon: <PeopleIcon />, path: '/admin/students' },
   { text: 'Problems', icon: <CodeIcon />, path: '/admin/problems' },
   { text: 'Job Notifications', icon: <NotificationsIcon />, path: '/admin/notifications' },
-  { text: 'Analytics', icon: <BarChartIcon />, path: '/admin/analytics' },
 ];
 
 const drawerWidth = 240;

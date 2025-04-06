@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import ProfileAvatar from '../../components/common/ProfileAvatar';
-import { leaderboardAPI } from '../../api';
+import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const SERVERURL = 'https://codementor-b244.onrender.com';
 
 const LeaderboardScreen = () => {
   const { user } = useAuth();
@@ -13,34 +16,26 @@ const LeaderboardScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   
+  useEffect(() => {
+    fetchLeaderboard();
+    fetchUserRank();
+  }, [timeFrame]);
+  
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Get leaderboard data
-      const leaderboardResponse = await leaderboardAPI.getLeaderboard(timeFrame);
+      const response = await axios.get(`${SERVERURL}/api/leaderboard?timeFrame=${timeFrame}`);
       
-      if (leaderboardResponse.success) {
-        setLeaderboardData(leaderboardResponse.leaderboard);
+      if (response.data.success) {
+        setLeaderboardData(response.data.leaderboard);
       } else {
-        throw new Error('Failed to fetch leaderboard');
+        setError('Failed to fetch leaderboard data');
       }
-      
-      // Get user's rank
-      try {
-        const userRankResponse = await leaderboardAPI.getUserRank(timeFrame);
-        if (userRankResponse.success) {
-          setUserRank(userRankResponse);
-        }
-      } catch (err) {
-        console.error('Error fetching user rank:', err);
-        // Not setting error here to still display the leaderboard
-      }
-      
     } catch (err) {
       console.error('Error fetching leaderboard:', err);
-      setError('Failed to load leaderboard data');
+      setError('Failed to fetch leaderboard data. Please try again.');
       
       // Fallback to sample data if API fails
       setLeaderboardData([
@@ -61,13 +56,41 @@ const LeaderboardScreen = () => {
     }
   };
   
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [timeFrame]);
+  const fetchUserRank = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      
+      if (!token) {
+        return;
+      }
+      
+      const response = await axios.get(
+        `${SERVERURL}/api/leaderboard/rank?timeFrame=${timeFrame}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        setUserRank(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching user rank:', err);
+      // Not setting error here to still show the leaderboard even if user rank fails
+    }
+  };
   
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchLeaderboard();
+    await fetchUserRank();
+  };
+  
+  const getTimeFrameLabel = () => {
+    switch (timeFrame) {
+      case 'weekly': return 'This Week';
+      case 'monthly': return 'This Month';
+      case 'allTime': return 'All Time';
+      default: return 'Leaderboard';
+    }
   };
   
   // Function to render a leaderboard item
@@ -80,7 +103,15 @@ const LeaderboardScreen = () => {
         index < 3 ? styles.topThree : null,
         isCurrentUser ? styles.currentUserItem : null
       ]}>
-        <Text style={styles.rankText}>{item.rank}</Text>
+        <View style={styles.rankColumn}>
+          {item.rank <= 3 ? (
+            <Text style={styles.trophyEmoji}>
+              {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : '🥉'}
+            </Text>
+          ) : (
+            <Text style={styles.rankText}>{item.rank}</Text>
+          )}
+        </View>
         <ProfileAvatar name={item.name} size={40} style={styles.avatar} />
         <View style={styles.nameContainer}>
           <Text style={[styles.nameText, isCurrentUser && styles.currentUserText]}>
@@ -149,6 +180,13 @@ const LeaderboardScreen = () => {
                 </Text>
               </View>
             )}
+            ListEmptyComponent={
+              <View style={styles.noDataContainer}>
+                <Text style={styles.noDataText}>
+                  No data available for {getTimeFrameLabel().toLowerCase()} leaderboard.
+                </Text>
+              </View>
+            }
           />
         )}
       </View>
@@ -226,12 +264,18 @@ const styles = StyleSheet.create({
     borderLeftWidth: 5,
     borderLeftColor: '#FFC107',
   },
+  rankColumn: {
+    width: 25,
+    marginRight: 15,
+    alignItems: 'center',
+  },
   rankText: {
     fontSize: 16,
     fontWeight: 'bold',
-    width: 25,
-    marginRight: 15,
     color: '#666',
+  },
+  trophyEmoji: {
+    fontSize: 20,
   },
   avatar: {
     marginRight: 12,
@@ -318,6 +362,16 @@ const styles = StyleSheet.create({
   userStatsText: {
     color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 14,
+  },
+  noDataContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noDataText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 

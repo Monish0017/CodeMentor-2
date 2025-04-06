@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { signInWithGoogle, handleWebGoogleSignIn, useGoogleAuth } from '../../utils/googleAuth';
+import { signInWithGoogle, handleWebGoogleSignIn } from '../../utils/googleAuth';
 
 // Server URL configuration - using environment variables
 const SERVERURL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.175.234:5000';
@@ -53,23 +53,6 @@ const LoginScreen = ({ navigation }) => {
     const [errorMsg, setErrorMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { signIn } = useAuth();
-    
-    // Use Google auth hook for non-web platforms
-    const { promptAsync, userData: googleUserData, loading: googleLoading, error: googleError } = useGoogleAuth();
-
-    // Handle Google sign-in result
-    useEffect(() => {
-        if (googleUserData && !googleLoading) {
-            handleGoogleData(googleUserData);
-        }
-    }, [googleUserData, googleLoading]);
-
-    // Handle error from Google sign-in
-    useEffect(() => {
-        if (googleError) {
-            setErrorMsg(googleError);
-        }
-    }, [googleError]);
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -102,53 +85,45 @@ const LoginScreen = ({ navigation }) => {
         }
     };
 
-    const handleGoogleData = async (userData) => {
-        try {
-            const loginResult = await loginApi.googleLogin(userData);
-            
-            if (loginResult.success) {
-                const { token, user } = loginResult.data;
-                await signIn(token, user);
-                
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Main' }],
-                });
-            } else {
-                if (loginResult.status === 401) {
-                    navigation.navigate('Register', { 
-                        googleData: userData 
-                    });
-                    return;
-                }
-                
-                setErrorMsg(loginResult.error);
-            }
-        } catch (err) {
-            console.error('Google auth data processing error:', err);
-            setErrorMsg('Failed to process Google sign-in data');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleGoogleLogin = async () => {
         try {
             setErrorMsg('');
             setIsLoading(true);
             
-            // Simplify the implementation for now to avoid expo-auth-session issues
-            const googleAuthResult = await signInWithGoogle();
+            let googleAuthResult;
+            
+            // Use signInWithGoogle for all platforms
+            // It will internally use handleWebGoogleSignIn for web
+            googleAuthResult = await signInWithGoogle();
             
             if (googleAuthResult.success) {
-                await handleGoogleData(googleAuthResult.userData);
+                const loginResult = await loginApi.googleLogin(googleAuthResult.userData);
+                
+                if (loginResult.success) {
+                    const { token, user } = loginResult.data;
+                    await signIn(token, user);
+                    
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Main' }],
+                    });
+                } else {
+                    if (loginResult.status === 401) {
+                        navigation.navigate('Register', { 
+                            googleData: googleAuthResult.userData
+                        });
+                        return;
+                    }
+                    
+                    setErrorMsg(loginResult.error);
+                }
             } else {
                 setErrorMsg(googleAuthResult.error);
-                setIsLoading(false);
             }
         } catch (err) {
             console.error('Google sign-in error:', err);
             setErrorMsg('Google sign-in failed. Please try again.');
+        } finally {
             setIsLoading(false);
         }
     };

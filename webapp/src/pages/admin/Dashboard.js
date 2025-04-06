@@ -39,13 +39,6 @@ const Dashboard = () => {
       link: '/admin/notifications',
       color: '#fff3e0'
     },
-    {
-      title: 'Analytics',
-      description: 'View statistics and performance metrics of students.',
-      icon: <LeaderboardIcon sx={{ fontSize: 50, color: '#e91e63' }} />,
-      link: '/admin/analytics',
-      color: '#fce4ec'
-    }
   ];
 
   return (

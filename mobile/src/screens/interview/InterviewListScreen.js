@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialIcons } from '@expo/vector-icons';
 
 // Server URL configuration
-const SERVERURL = 'http://localhost:5000';
+const SERVERURL = 'https://codementor-b244.onrender.com';
 
 const InterviewListScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('new'); // 'new' or 'history'

@@ -28,9 +28,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { SERVERURL, getAuthHeader } from '../../utils/api';
 
 const StudentDisplay = () => {
@@ -166,13 +164,13 @@ const StudentDisplay = () => {
           Student Management
         </Typography>
         <Typography variant="body1" color="textSecondary" paragraph>
-          View and manage all registered students. You can search, filter, and delete student records.
+          View and manage all registered students. You can search and delete student records.
         </Typography>
       </Paper>
 
       <Paper elevation={3} sx={{ mb: 4, p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <SearchIcon sx={{ color: 'action.active', mr: 1 }} />
               <TextField
@@ -184,15 +182,6 @@ const StudentDisplay = () => {
                 onChange={handleSearch}
               />
             </Box>
-          </Grid>
-          <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
-            <Button 
-              startIcon={<FilterListIcon />} 
-              variant="outlined" 
-              sx={{ mr: 1 }}
-            >
-              Filter
-            </Button>
           </Grid>
         </Grid>
       </Paper>
@@ -240,15 +229,8 @@ const StudentDisplay = () => {
                       color="error" 
                       onClick={() => handleDeleteClick(student)}
                       size="small"
-                      sx={{ mr: 1 }}
                     >
                       <DeleteIcon />
-                    </IconButton>
-                    <IconButton 
-                      color="primary"
-                      size="small"
-                    >
-                      <EditIcon />
                     </IconButton>
                   </TableCell>
                 </TableRow>

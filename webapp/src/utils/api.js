@@ -1,4 +1,4 @@
-export const SERVERURL = 'http://localhost:5000';
+export const SERVERURL = 'https://codementor-b244.onrender.com';
 
 export const getAuthHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem('token')}`
