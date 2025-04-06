@@ -32,14 +32,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-// Configure CORS middleware with more specific options
+// Allow all origins (for local development and Expo)
 app.use(cors({
-  origin: [
-    'https://code-mentor-drab.vercel.app', // Your production frontend
-    'http://localhost:3000',               // Local development frontend
-    'http://127.0.0.1:3000'
-  ],
-  credentials: true,  // Allow cookies to be sent
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -56,12 +51,6 @@ if (process.env.NODE_ENV === 'development') {
 // Add request logging middleware - place this right after other middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.originalUrl}`);
-  next();
-});
-
-// Expose CORS headers in the response
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Credentials', 'true');
   next();
 });
 
@@ -129,8 +118,8 @@ app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);
   res.status(500).json({
     success: false,
-    message: 'An unexpected error occurred',
-    error: err.message
+    message: 'Server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
   });
 });
 

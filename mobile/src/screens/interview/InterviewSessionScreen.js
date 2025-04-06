@@ -2,8 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert, Animated, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Speech from 'expo-speech';
-import * as Audio from 'expo-av';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View as PlainView } from 'react-native'; // Import regular View for the header
@@ -37,7 +35,7 @@ const interviewSessionApi = {
             const token = await AsyncStorage.getItem('token');
             const response = await axios.post(`${SERVERURL}/api/interview/submit`,
                 { interviewId, questionId, answer },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` }}
             );
             if (response.data.success) {
                 return {
@@ -61,7 +59,7 @@ const interviewSessionApi = {
             const token = await AsyncStorage.getItem('token');
             const response = await axios.post(`${SERVERURL}/api/interview/feedback`,
                 { interviewId },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` }}
             );
             if (response.data.success) {
                 return { success: true, feedback: response.data.feedback };
@@ -92,10 +90,6 @@ const InterviewSessionScreen = ({ route, navigation }) => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
-    const [isRecording, setIsRecording] = useState(false);
-    const [transcribedText, setTranscribedText] = useState('');
-    const [transcription, setTranscription] = useState('');
-    const [recording, setRecording] = useState(null);
     const [questionTimer, setQuestionTimer] = useState(0);
     const [timerInterval, setTimerInterval] = useState(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -164,75 +158,6 @@ const InterviewSessionScreen = ({ route, navigation }) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const startRecording = async () => {
-        try {
-            const { status } = await Audio.requestPermissionsAsync();
-            if (status !== 'granted') {
-                setError('Permission to record audio was denied');
-                return;
-            }
-            try {
-                await Audio.setAudioModeAsync({
-                    allowsRecordingIOS: true,
-                    playsInSilentModeIOS: true,
-                });
-
-                const { recording } = await Audio.Recording.createAsync(
-                    Audio.RecordingOptionsPresets.HIGH_QUALITY
-                );
-                await recording.startAsync();
-                setRecording(recording);
-                setIsRecording(true);
-                Speech.speak('Recording started. Speak your answer now.', {
-                    language: 'en',
-                    pitch: 1,
-                    rate: 0.8,
-                });
-            } catch (prepError) {
-                console.error('Error preparing recording:', prepError);
-                setError('Could not start recording. Please check your device settings.');
-            }
-        } catch (err) {
-            console.error('Failed to start recording', err);
-            setError('Failed to start recording. Please try again.');
-        }
-    };
-
-    const stopRecording = async () => {
-        try {
-            if (!recording) return;
-            setIsRecording(false);
-            await recording.stopAndUnloadAsync();
-            const uri = recording.getURI();
-            try {
-                setTranscription('This is a simulated transcription of the recorded audio. In a real app, this would be actual transcribed text from a speech-to-text service.');
-
-                setCurrentAnswer(prev => {
-                    const newText = 'This is a simulated transcription of the recorded audio.';
-                    return prev ? `${prev}\n\n${newText}` : newText;
-                });
-
-                setRecording(null);
-            } catch (err) {
-                console.error('Failed to process recording:', err);
-                setError('Failed to process recording. Please try again.');
-                setIsRecording(false);
-                setRecording(null);
-            }
-        } catch (stopError) {
-            console.error('Error stopping recording:', stopError);
-            setError('Failed to process recording. Please try typing your answer instead.');
-        }
-    };
-
-    const toggleRecording = () => {
-        if (isRecording) {
-            stopRecording();
-        } else {
-            startRecording();
-        }
     };
 
     const handleSubmitAnswer = async () => {
@@ -333,27 +258,6 @@ const InterviewSessionScreen = ({ route, navigation }) => {
                         editable={!answerFeedback && !submitting}
                     />
                     <View style={styles.buttonRow}>
-                        <TouchableOpacity
-                            style={[
-                                styles.recordButton,
-                                isRecording && styles.recordingButton,
-                                (answerFeedback || submitting) && styles.disabledButton
-                            ]}
-                            onPress={toggleRecording}
-                            disabled={!!answerFeedback || submitting}
-                        >
-                            <MaterialIcons
-                                name={isRecording ? "mic-off" : "mic"}
-                                size={24}
-                                color={isRecording ? "#FFFFFF" : "#6200EE"}
-                            />
-                            <Text style={[
-                                styles.recordButtonText,
-                                isRecording && styles.recordingButtonText
-                            ]}>
-                                {isRecording ? "Stop Recording" : "Record Answer"}
-                            </Text>
-                        </TouchableOpacity>
                         {!answerFeedback ? (
                             <TouchableOpacity
                                 style={[styles.submitButton, (submitting || !currentAnswer.trim()) && styles.disabledButton]}
@@ -604,32 +508,8 @@ const styles = StyleSheet.create({
     },
     buttonRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginVertical: 16,
-    },
-    recordButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'center',
-        marginVertical: 12,
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#6200EE',
-        backgroundColor: 'transparent',
-    },
-    recordingButton: {
-        backgroundColor: '#F44336',
-        borderColor: '#F44336',
-    },
-    recordButtonText: {
-        color: '#6200EE',
-        fontWeight: '500',
-        marginLeft: 8,
-    },
-    recordingButtonText: {
-        color: '#FFFFFF',
+        marginVertical: 16,
     },
     submitButton: {
         backgroundColor: '#6200EE',
