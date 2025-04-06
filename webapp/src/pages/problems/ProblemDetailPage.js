@@ -206,7 +206,7 @@ public class Main {
     }
     
     setSubmitting(true);
-    setOutput('');
+    setOutput('Submitting your solution... Please wait.');
     
     try {
       const response = await fetch(`${SERVERURL}/api/problems/${problemId}/submit`, {
@@ -219,7 +219,7 @@ public class Main {
           code,
           language,
         }),
-        credentials: 'include',
+        credentials: 'same-origin'
       });
       
       const data = await response.json();
@@ -263,7 +263,17 @@ public class Main {
       }
     } catch (error) {
       console.error('Error submitting solution:', error);
-      setOutput(`Error: ${error.message}`);
+      
+      // Special handling for CORS errors
+      if (error.message && error.message.includes('NetworkError')) {
+        setOutput(
+          `CORS Error: Unable to connect to the server.\n\n` +
+          `This is likely due to a cross-origin (CORS) issue between the frontend and backend.\n\n` +
+          `Please contact support or try again later.`
+        );
+      } else {
+        setOutput(`Error: ${error.message}`);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -271,9 +281,10 @@ public class Main {
 
   const handleRunTests = async () => {
     setSubmitting(true);
-    setOutput('');
+    setOutput('Running your code... Please wait.');
     
     try {
+      console.log(`Sending code execution request to ${SERVERURL}/api/problems/${problemId}/run`);
       const response = await fetch(`${SERVERURL}/api/problems/${problemId}/run`, {
         method: 'POST',
         headers: {
@@ -282,9 +293,9 @@ public class Main {
         },
         body: JSON.stringify({
           code,
-          language, // Now using the selected language
+          language,
         }),
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'same-origin'
       });
       
       const data = await response.json();
@@ -297,11 +308,22 @@ public class Main {
           `Memory Used: ${data.result.memory} KB`
         );
       } else {
-        setOutput(`Error: ${data.message}`);
+        setOutput(`Error: ${data.message || 'Failed to run code'}\n\n${data.details || ''}`);
+        console.error('Backend error:', data);
       }
     } catch (error) {
       console.error('Error running code:', error);
-      setOutput(`Error: ${error.message}`);
+      
+      // Special handling for CORS errors
+      if (error.message && error.message.includes('NetworkError')) {
+        setOutput(
+          `CORS Error: Unable to connect to the server.\n\n` +
+          `This is likely due to a cross-origin (CORS) issue between the frontend and backend.\n\n` +
+          `Please contact support or try again later.`
+        );
+      } else {
+        setOutput(`Error: ${error.message}`);
+      }
     } finally {
       setSubmitting(false);
     }

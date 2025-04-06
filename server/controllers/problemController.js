@@ -223,8 +223,9 @@ exports.submitSolution = async (req, res) => {
     
     // First attempt to execute the code with Judge0
     try {
-      // Configure Judge0 request
-      const judge0Url = process.env.JUDGE0_URL || 'http://localhost:2358';
+      // Configure Judge0 request with error handling
+      const judge0Url = 'http://localhost:2358';
+      console.log(`Attempting to connect to Judge0 at: ${judge0Url}`);
       
       // Get language ID mapping for Judge0
       const languageIdMap = {
@@ -260,9 +261,13 @@ exports.submitSolution = async (req, res) => {
           // We'll do the comparison ourselves
           cpu_time_limit: 2, // 2 seconds
           memory_limit: 128000 // 128MB
-        });
+        }, { timeout: 5000 }); // 5 second timeout
         
         const token = response.data.token;
+        
+        if (!token) {
+          throw new Error('No submission token received from Judge0');
+        }
         
         // Poll for Judge0 results
         let executionResult;
@@ -271,7 +276,8 @@ exports.submitSolution = async (req, res) => {
         while (attempts < 10) {
           await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between polls
           
-          const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`);
+          const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, 
+            { timeout: 3000 }); // 3 second timeout
           executionResult = resultResponse.data;
           
           if (executionResult.status.id !== 1 && executionResult.status.id !== 2) {
@@ -484,8 +490,8 @@ exports.submitSolution = async (req, res) => {
       console.error('Error with Judge0:', judgeError);
       
       // If Judge0 fails, fallback to just AI evaluation
-      submission.status = 'Runtime Error'; // Changed from 'Failed' to 'Runtime Error'
-      submission.error = judgeError.message;
+      submission.status = 'Runtime Error';
+      submission.error = 'Code execution service temporarily unavailable. ' + judgeError.message;
       
       // Still try to get AI feedback on the code
       try {
@@ -582,8 +588,9 @@ exports.runCode = async (req, res) => {
       });
     }
     
-    // Configure Judge0 request
-    const judge0Url = process.env.JUDGE0_URL || 'http://localhost:2358';
+    // Configure Judge0 request with error handling
+    const judge0Url = 'http://localhost:2358';
+    console.log(`Attempting to connect to Judge0 at: ${judge0Url}`);
     
     // Get language ID mapping for Judge0
     const languageIdMap = {
@@ -591,6 +598,7 @@ exports.runCode = async (req, res) => {
       'python': 71,
       'cpp': 54,
       'java': 62,
+      'c': 50,
       // Add more language mappings as needed
     };
     
@@ -606,45 +614,61 @@ exports.runCode = async (req, res) => {
     // Use a test case from the problem or user provided input
     const testInput = (problem.testCases.length > 0 ? problem.testCases[0].input : '');
     
-    const response = await axios.post(`${judge0Url}/submissions`, {
-      source_code: code,
-      language_id: languageId,
-      stdin: testInput,
-      cpu_time_limit: 2, // 2 seconds
-      memory_limit: 128000 // 128MB
-    });
-    
-    const token = response.data.token;
-    
-    // Poll for Judge0 results
-    let executionResult;
-    let attempts = 0;
-    
-    while (attempts < 10) {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between polls
+    try {
+      const response = await axios.post(`${judge0Url}/submissions`, {
+        source_code: code,
+        language_id: languageId,
+        stdin: testInput,
+        cpu_time_limit: 2, // 2 seconds
+        memory_limit: 128000 // 128MB
+      }, { timeout: 5000 }); // 5 second timeout
       
-      const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`);
-      executionResult = resultResponse.data;
+      const token = response.data.token;
       
-      if (executionResult.status.id !== 1 && executionResult.status.id !== 2) {
-        // Not in Queue or Processing
-        break;
+      if (!token) {
+        throw new Error('No submission token received from Judge0');
       }
       
-      attempts++;
+      // Poll for Judge0 results
+      let executionResult;
+      let attempts = 0;
+      
+      while (attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between polls
+        
+        const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, 
+          { timeout: 3000 }); // 3 second timeout
+        executionResult = resultResponse.data;
+        
+        if (executionResult.status.id !== 1 && executionResult.status.id !== 2) {
+          // Not in Queue or Processing
+          break;
+        }
+        
+        attempts++;
+      }
+      
+      res.json({
+        success: true,
+        result: {
+          output: executionResult.stdout || '',
+          error: executionResult.stderr || '',
+          status: executionResult.status.description,
+          time: executionResult.time,
+          memory: executionResult.memory
+        }
+      });
+    } catch (judgeError) {
+      console.error('Error connecting to Judge0:', judgeError);
+      
+      // Provide a more user-friendly error message
+      res.status(503).json({
+        success: false,
+        message: 'Code execution service temporarily unavailable',
+        details: 'The server could not connect to the code execution service. Please try again later.',
+        error: judgeError.message
+      });
     }
-    
-    res.json({
-      success: true,
-      result: {
-        output: executionResult.stdout || '',
-        error: executionResult.stderr || '',
-        status: executionResult.status.description,
-        time: executionResult.time,
-        memory: executionResult.memory
-      }
-    });
-    
   } catch (error) {
     console.error('Error running code:', error);
     res.status(500).json({

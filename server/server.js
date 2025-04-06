@@ -35,11 +35,9 @@ const PORT = process.env.PORT || 5000;
 // Configure CORS middleware with more specific options
 app.use(cors({
   origin: [
-    'http://localhost:3000',  // React dev server
-    'http://127.0.0.1:3000',
-    'http://localhost:5000',  // If serving frontend from same port
-    'http://127.0.0.1:5000',
-    'https://code-mentor-drab.vercel.app'
+    'https://code-mentor-drab.vercel.app', // Your production frontend
+    'http://localhost:3000',               // Local development frontend
+    'http://127.0.0.1:3000'
   ],
   credentials: true,  // Allow cookies to be sent
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -58,6 +56,12 @@ if (process.env.NODE_ENV === 'development') {
 // Add request logging middleware - place this right after other middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// Expose CORS headers in the response
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
   next();
 });
 
@@ -125,8 +129,8 @@ app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);
   res.status(500).json({
     success: false,
-    message: 'Server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    message: 'An unexpected error occurred',
+    error: err.message
   });
 });
 
