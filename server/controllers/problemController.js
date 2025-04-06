@@ -223,9 +223,16 @@ exports.submitSolution = async (req, res) => {
     
     // First attempt to execute the code with Judge0
     try {
-      // Configure Judge0 request with error handling
-      const judge0Url = 'http://localhost:2358';
-      console.log(`Attempting to connect to Judge0 at: ${judge0Url}`);
+      // Configure Judge0 request with RapidAPI
+      const judge0Url = process.env.JUDGE0_API_URL ;
+      const judge0ApiKey = process.env.JUDGE0_API_KEY;
+      
+      // Configure headers for RapidAPI
+      const headers = {
+        'X-RapidAPI-Key': judge0ApiKey,
+        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+        'Content-Type': 'application/json'
+      };
       
       // Get language ID mapping for Judge0
       const languageIdMap = {
@@ -233,6 +240,7 @@ exports.submitSolution = async (req, res) => {
         'python': 71,
         'cpp': 54,
         'java': 62,
+        'c': 50,
         // Add more language mappings as needed
       };
       
@@ -261,13 +269,9 @@ exports.submitSolution = async (req, res) => {
           // We'll do the comparison ourselves
           cpu_time_limit: 2, // 2 seconds
           memory_limit: 128000 // 128MB
-        }, { timeout: 5000 }); // 5 second timeout
+        }, { headers });
         
         const token = response.data.token;
-        
-        if (!token) {
-          throw new Error('No submission token received from Judge0');
-        }
         
         // Poll for Judge0 results
         let executionResult;
@@ -276,8 +280,7 @@ exports.submitSolution = async (req, res) => {
         while (attempts < 10) {
           await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between polls
           
-          const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, 
-            { timeout: 3000 }); // 3 second timeout
+          const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, { headers });
           executionResult = resultResponse.data;
           
           if (executionResult.status.id !== 1 && executionResult.status.id !== 2) {
@@ -487,11 +490,11 @@ exports.submitSolution = async (req, res) => {
       });
       
     } catch (judgeError) {
-      console.error('Error with Judge0:', judgeError);
+      console.error('Error with Judge0 RapidAPI:', judgeError);
       
       // If Judge0 fails, fallback to just AI evaluation
       submission.status = 'Runtime Error';
-      submission.error = 'Code execution service temporarily unavailable. ' + judgeError.message;
+      submission.error = `Judge0 execution error: ${judgeError.message}`;
       
       // Still try to get AI feedback on the code
       try {
@@ -588,9 +591,16 @@ exports.runCode = async (req, res) => {
       });
     }
     
-    // Configure Judge0 request with error handling
-    const judge0Url = 'http://localhost:2358';
-    console.log(`Attempting to connect to Judge0 at: ${judge0Url}`);
+    // Configure Judge0 request with RapidAPI
+    const judge0Url = process.env.JUDGE0_API_URL;
+    const judge0ApiKey = process.env.JUDGE0_API_KEY;
+    
+    // Configure headers for RapidAPI
+    const headers = {
+      'X-RapidAPI-Key': judge0ApiKey,
+      'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+      'Content-Type': 'application/json'
+    };
     
     // Get language ID mapping for Judge0
     const languageIdMap = {
@@ -621,7 +631,7 @@ exports.runCode = async (req, res) => {
         stdin: testInput,
         cpu_time_limit: 2, // 2 seconds
         memory_limit: 128000 // 128MB
-      }, { timeout: 5000 }); // 5 second timeout
+      }, { headers });
       
       const token = response.data.token;
       
@@ -636,8 +646,7 @@ exports.runCode = async (req, res) => {
       while (attempts < 10) {
         await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between polls
         
-        const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, 
-          { timeout: 3000 }); // 3 second timeout
+        const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, { headers });
         executionResult = resultResponse.data;
         
         if (executionResult.status.id !== 1 && executionResult.status.id !== 2) {
@@ -659,14 +668,11 @@ exports.runCode = async (req, res) => {
         }
       });
     } catch (judgeError) {
-      console.error('Error connecting to Judge0:', judgeError);
-      
-      // Provide a more user-friendly error message
+      console.error('Error with Judge0 RapidAPI:', judgeError);
       res.status(503).json({
         success: false,
-        message: 'Code execution service temporarily unavailable',
-        details: 'The server could not connect to the code execution service. Please try again later.',
-        error: judgeError.message
+        message: 'Code execution service error',
+        details: judgeError.message
       });
     }
   } catch (error) {
