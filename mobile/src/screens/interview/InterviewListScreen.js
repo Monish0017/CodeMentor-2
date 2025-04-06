@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
@@ -9,8 +9,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 const SERVERURL = 'https://codementor-b244.onrender.com';
 
 const InterviewListScreen = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState('new'); // 'new' or 'history'
-  const [pastInterviews, setPastInterviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -31,42 +29,8 @@ const InterviewListScreen = ({ navigation }) => {
     { id: 'advanced', label: 'Advanced', description: 'For senior developers (5+ years experience)' }
   ];
 
-  const fetchPastInterviews = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const token = await AsyncStorage.getItem('token');
-      
-      const response = await axios.get(`${SERVERURL}/api/interview/history`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.success) {
-        setPastInterviews(response.data.interviews);
-      } else {
-        setError(response.data.message || 'Failed to fetch interview history');
-      }
-    } catch (err) {
-      console.error('Error fetching interview history:', err);
-      setError('Failed to load interview history. Please try again.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'history') {
-      fetchPastInterviews();
-    }
-  }, [activeTab]);
-
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    if (activeTab === 'history') {
-      await fetchPastInterviews();
-    }
     setRefreshing(false);
   };
 
@@ -169,76 +133,6 @@ const InterviewListScreen = ({ navigation }) => {
     );
   };
 
-  const renderPastInterviews = () => {
-    if (loading && !refreshing) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6200EE" />
-          <Text style={styles.loadingText}>Loading interview history...</Text>
-        </View>
-      );
-    }
-    
-    if (error) {
-      return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchPastInterviews}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    
-    if (pastInterviews.length === 0) {
-      return (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>You haven't completed any interviews yet</Text>
-          <TouchableOpacity 
-            style={styles.startButton}
-            onPress={() => setActiveTab('new')}
-          >
-            <Text style={styles.startButtonText}>Start Your First Interview</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    return (
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        {pastInterviews.map((item) => (
-          <TouchableOpacity 
-            key={item._id} 
-            style={styles.card}
-            onPress={() => navigation.navigate('InterviewSession', { interviewId: item._id })}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{item.type} Interview</Text>
-              <View style={[
-                styles.difficultyBadge, 
-                item.difficulty === 'Beginner' ? styles.easyBadge : 
-                item.difficulty === 'Intermediate' ? styles.mediumBadge : 
-                styles.hardBadge
-              ]}>
-                <Text style={styles.difficultyText}>{item.difficulty}</Text>
-              </View>
-            </View>
-            <View style={styles.cardFooter}>
-              <Text style={styles.cardMetadata}>Date: {new Date(item.createdAt).toLocaleDateString()}</Text>
-              <View style={styles.scoreBadge}>
-                <Text style={styles.scoreText}>Score: {item.overallScore || 'N/A'}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -247,25 +141,6 @@ const InterviewListScreen = ({ navigation }) => {
       </View>
       
       <View style={styles.contentContainer}>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'new' && styles.activeTab]}
-            onPress={() => setActiveTab('new')}
-          >
-            <Text style={[styles.tabText, activeTab === 'new' && styles.activeTabText]}>
-              New Interview
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'history' && styles.activeTab]}
-            onPress={() => setActiveTab('history')}
-          >
-            <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>
-              Past Interviews
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         <ScrollView 
           style={styles.mainScrollView}
           contentContainerStyle={styles.scrollContent}
@@ -276,7 +151,7 @@ const InterviewListScreen = ({ navigation }) => {
             />
           }
         >
-          {activeTab === 'new' ? renderInterviewSetup() : renderPastInterviews()}
+          {renderInterviewSetup()}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -296,12 +171,13 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingTop: 0, // Removed padding here to eliminate the gap
   },
   header: {
     backgroundColor: '#6200EE',
     padding: 20,
     paddingBottom: 20,
-    zIndex: 2,
+
   },
   headerTitle: {
     fontSize: 24,
@@ -315,166 +191,14 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    marginTop: -5,
-    zIndex: 1,
-  },
-  listContainer: {
-    padding: 16,
-    paddingTop: 20,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
-    flex: 1,
-  },
-  difficultyBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  easyBadge: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-  },
-  mediumBadge: {
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-  },
-  hardBadge: {
-    backgroundColor: 'rgba(244, 67, 54, 0.1)',
-  },
-  difficultyText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333333',
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardMetadata: {
-    fontSize: 14,
-    color: '#888888',
-  },
-  startButton: {
-    backgroundColor: '#6200EE',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  startButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 40,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#757575',
-  },
-  errorContainer: {
-    margin: 20,
-    padding: 16,
-    backgroundColor: 'rgba(244, 67, 54, 0.1)',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  errorText: {
-    color: '#F44336',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  retryButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#6200EE',
-    borderRadius: 4,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    borderRadius: 8,
-    backgroundColor: '#F0F0F0',
-    margin: 16,
-    marginTop: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {
-    backgroundColor: '#6200EE',
-  },
-  tabText: {
-    fontWeight: '600',
-    color: '#666666',
-  },
-  activeTabText: {
-    color: '#FFFFFF',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666666',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  scoreBadge: {
-    backgroundColor: 'rgba(98, 0, 238, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  scoreText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6200EE',
+    backgroundColor: '#F5F5F5',
   },
   setupForm: {
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 20,
     margin: 16,
+    marginTop: 10, // Reduced top margin to minimize gap
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -540,75 +264,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
     marginLeft: 8,
-  },
-  typeCardsContainer: {
-    padding: 16,
-  },
-  typeCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    alignItems: 'center',
-  },
-  typeIcon: {
-    marginBottom: 16,
-  },
-  typeTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  typeDescription: {
-    fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  difficultySection: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 16,
-  },
-  difficultyCards: {
-    flexDirection: 'column',
-    gap: 12,
-  },
-  difficultyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  selectedDifficultyCard: {
-    borderColor: '#6200EE',
-    backgroundColor: 'rgba(98, 0, 238, 0.05)',
-  },
-  difficultyLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 4,
-  },
-  selectedDifficultyLabel: {
-    color: '#6200EE',
-  },
-  difficultyDescription: {
-    fontSize: 14,
-    color: '#666666',
   },
 });
 

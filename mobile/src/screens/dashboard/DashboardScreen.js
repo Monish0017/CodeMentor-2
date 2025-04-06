@@ -236,7 +236,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
             )}
             
-            {/* Stats Cards */}
+            {/* Stats Cards - removed streak card */}
             <View style={styles.statsContainer}>
               <View style={styles.statsCard}>
                 <Text style={styles.statsValue}>{stats.problemsSolved}</Text>
@@ -247,28 +247,24 @@ const DashboardScreen = ({ navigation }) => {
                 <Text style={styles.statsLabel}>Interviews</Text>
               </View>
               <View style={styles.statsCard}>
-                <Text style={styles.statsValue}>{stats.streak}</Text>
-                <Text style={styles.statsLabel}>Day Streak</Text>
-              </View>
-              <View style={styles.statsCard}>
                 <Text style={styles.statsValue}>#{stats.rank}</Text>
                 <Text style={styles.statsLabel}>Ranking</Text>
               </View>
             </View>
             
-            {/* Quick Actions */}
+            {/* Quick Actions - modified navigation targets */}
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <View style={styles.quickActionContainer}>
               <TouchableOpacity 
                 style={styles.actionButton}
-                onPress={() => navigation.navigate('Problems')}
+                onPress={() => navigation.navigate('Coding Problems')}
               >
                 <Text style={styles.actionIcon}>📝</Text>
                 <Text style={styles.actionText}>Solve Problem</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.actionButton}
-                onPress={() => navigation.navigate('Interview')}
+                onPress={() => navigation.navigate('AI Interview')}
               >
                 <Text style={styles.actionIcon}>🤖</Text>
                 <Text style={styles.actionText}>Start Interview</Text>

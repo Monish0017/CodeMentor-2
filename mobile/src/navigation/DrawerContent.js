@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
   useTheme,
-  Avatar,
   Title,
   Caption,
   Paragraph,
   Drawer,
   Text,
   TouchableRipple,
-  Switch
 } from 'react-native-paper';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function DrawerContent(props) {
   const { userData, signOut } = useAuth();
-  const { theme, toggleTheme } = useAppTheme();
+  const { theme } = useAppTheme();
   const paperTheme = useTheme();
   
   // Handle logout
@@ -52,12 +50,6 @@ export default function DrawerContent(props) {
               {(userData?.name || 'User').charAt(0).toUpperCase()}
             </Text>
           </View>
-          <Avatar.Image
-            source={{
-              uri: userData?.profilePic || 'https://ui-avatars.com/api/?name=User&background=6200EE&color=fff'
-            }}
-            size={50}
-          />
           <Title style={styles.title}>{userData?.name || 'User'}</Title>
           <Caption style={styles.caption}>{userData?.email || 'user@example.com'}</Caption>
           <View style={styles.row}>
@@ -114,17 +106,6 @@ export default function DrawerContent(props) {
           />
         </Drawer.Section>
 
-        <Drawer.Section title="Preferences">
-          <TouchableRipple onPress={toggleTheme}>
-            <View style={styles.preference}>
-              <Text>Dark Theme</Text>
-              <View pointerEvents="none">
-                <Switch value={theme === 'dark'} />
-              </View>
-            </View>
-          </TouchableRipple>
-        </Drawer.Section>
-
         <Drawer.Section>
           <DrawerItem
             icon={({ color, size }) => (
@@ -171,11 +152,5 @@ const styles = StyleSheet.create({
   },
   drawerSection: {
     marginTop: 15,
-  },
-  preference: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
   },
 });
