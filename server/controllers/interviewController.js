@@ -27,22 +27,12 @@ const getGeminiModel = (genAI) => {
 // Helper function to extract JSON from Gemini responses that might contain markdown
 const extractJsonFromResponse = (text) => {
   try {
-    // First, try to clean up any potential control characters or invalid JSON characters
-    const cleanedText = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ")
-                            .replace(/\n/g, " ")
-                            .replace(/\r/g, " ");
-    
-    // Try direct parsing with the cleaned text
-    try {
-      return JSON.parse(cleanedText);
-    } catch (error) {
-      // If direct parsing fails, continue with other methods
-      console.log("Initial parsing failed, trying alternative methods");
-    }
-    
-    // Check for markdown code blocks
+    // First attempt direct parsing
+    return JSON.parse(text);
+  } catch (error) {
+    // If direct parsing fails, try to extract JSON from markdown code blocks
     const jsonRegex = /```(?:json)?\s*([\s\S]*?)```/;
-    const match = cleanedText.match(jsonRegex);
+    const match = text.match(jsonRegex);
     
     if (match && match[1]) {
       // Found JSON within markdown code blocks
@@ -52,9 +42,9 @@ const extractJsonFromResponse = (text) => {
     
     // If no code block is found but the response has square brackets
     // Try to extract array content
-    if (cleanedText.includes('[') && cleanedText.includes(']')) {
+    if (text.includes('[') && text.includes(']')) {
       const arrayRegex = /\[([\s\S]*?)\]/;
-      const arrayMatch = cleanedText.match(arrayRegex);
+      const arrayMatch = text.match(arrayRegex);
       
       if (arrayMatch && arrayMatch[1]) {
         return JSON.parse(`[${arrayMatch[1]}]`);
@@ -62,8 +52,6 @@ const extractJsonFromResponse = (text) => {
     }
     
     // If still failing, throw the original error
-    throw new Error(`Failed to parse AI response as JSON`);
-  } catch (error) {
     throw new Error(`Failed to parse AI response as JSON: ${error.message}`);
   }
 };

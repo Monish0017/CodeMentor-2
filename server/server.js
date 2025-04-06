@@ -32,9 +32,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-// Allow all origins (for local development and Expo)
+// Configure CORS middleware with more specific options
 app.use(cors({
-  origin: '*',
+  origin: [
+    'http://localhost:3000',  // React dev server
+    'http://127.0.0.1:3000',
+    'http://localhost:5000',  // If serving frontend from same port
+    'http://127.0.0.1:5000',
+    'https://code-mentor-drab.vercel.app'
+  ],
+  credentials: true,  // Allow cookies to be sent
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));

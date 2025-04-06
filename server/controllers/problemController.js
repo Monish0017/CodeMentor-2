@@ -223,16 +223,8 @@ exports.submitSolution = async (req, res) => {
     
     // First attempt to execute the code with Judge0
     try {
-      // Configure Judge0 request with RapidAPI
-      const judge0Url = process.env.JUDGE0_API_URL;
-      const judge0ApiKey = process.env.JUDGE0_API_KEY;
-      
-      // Configure headers for RapidAPI
-      const headers = {
-        'X-RapidAPI-Key': judge0ApiKey,
-        'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-        'Content-Type': 'application/json'
-      };
+      // Configure Judge0 request
+      const judge0Url = process.env.JUDGE0_URL || 'http://localhost:2358';
       
       // Get language ID mapping for Judge0
       const languageIdMap = {
@@ -268,7 +260,7 @@ exports.submitSolution = async (req, res) => {
           // We'll do the comparison ourselves
           cpu_time_limit: 2, // 2 seconds
           memory_limit: 128000 // 128MB
-        }, { headers });
+        });
         
         const token = response.data.token;
         
@@ -279,7 +271,7 @@ exports.submitSolution = async (req, res) => {
         while (attempts < 10) {
           await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between polls
           
-          const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, { headers });
+          const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`);
           executionResult = resultResponse.data;
           
           if (executionResult.status.id !== 1 && executionResult.status.id !== 2) {
@@ -590,16 +582,8 @@ exports.runCode = async (req, res) => {
       });
     }
     
-    // Configure Judge0 request with RapidAPI
-    const judge0Url = process.env.JUDGE0_API_URL;
-    const judge0ApiKey = process.env.JUDGE0_API_KEY;
-    
-    // Configure headers for RapidAPI
-    const headers = {
-      'X-RapidAPI-Key': judge0ApiKey,
-      'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-      'Content-Type': 'application/json'
-    };
+    // Configure Judge0 request
+    const judge0Url = process.env.JUDGE0_URL || 'http://localhost:2358';
     
     // Get language ID mapping for Judge0
     const languageIdMap = {
@@ -628,7 +612,7 @@ exports.runCode = async (req, res) => {
       stdin: testInput,
       cpu_time_limit: 2, // 2 seconds
       memory_limit: 128000 // 128MB
-    }, { headers });
+    });
     
     const token = response.data.token;
     
@@ -639,7 +623,7 @@ exports.runCode = async (req, res) => {
     while (attempts < 10) {
       await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms between polls
       
-      const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`, { headers });
+      const resultResponse = await axios.get(`${judge0Url}/submissions/${token}`);
       executionResult = resultResponse.data;
       
       if (executionResult.status.id !== 1 && executionResult.status.id !== 2) {
