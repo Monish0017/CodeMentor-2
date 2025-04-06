@@ -6,7 +6,8 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { signInWithGoogle } from '../../utils/googleAuth';
+import { useGoogleAuth } from '../../utils/clerkAuth';
+import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Server URL configuration - using environment variables
@@ -93,6 +94,9 @@ const registerApi = {
 
 const RegisterScreen = ({ navigation, route }) => {
     const { signIn } = useAuth();
+    const { googleSignIn } = useGoogleAuth();
+    const { user: clerkUser } = useUser();
+    const { signOut: clerkSignOut } = useClerkAuth();
     const googleData = route.params?.googleData;
     
     const [name, setName] = useState(googleData?.name || '');
@@ -105,10 +109,20 @@ const RegisterScreen = ({ navigation, route }) => {
     const [imagePreview, setImagePreview] = useState(googleData?.picture || null);
     
     useEffect(() => {
-        if (route.params?.googleAuthPending) {
-            setErrorMsg('Please complete Google authentication to continue');
-        }
-    }, [route.params?.googleAuthPending]);
+        // Check for any pending auth or active sessions
+        const checkSession = async () => {
+            if (clerkUser && !googleData) {
+                // We have a Clerk user but no Google data passed in from login screen
+                console.log("Active Clerk session detected during registration");
+            }
+            
+            if (route.params?.googleAuthPending) {
+                setErrorMsg('Please complete Google authentication to continue');
+            }
+        };
+        
+        checkSession();
+    }, [route.params?.googleAuthPending, clerkUser, googleData]);
     
     const pickImage = async () => {
         try {
@@ -191,6 +205,7 @@ const RegisterScreen = ({ navigation, route }) => {
     const handleGoogleSignup = async () => {
         try {
             if (googleData) {
+                // If we already have Google data from the login screen, use it
                 setIsLoading(true);
                 
                 const result = await registerApi.googleRegister(googleData);
@@ -214,7 +229,13 @@ const RegisterScreen = ({ navigation, route }) => {
             setErrorMsg('');
             setIsLoading(true);
             
-            const googleAuthResult = await signInWithGoogle();
+            // Sign out from any existing Clerk session first
+            if (clerkUser) {
+                await clerkSignOut();
+            }
+            
+            // Use Clerk's OAuth flow
+            const googleAuthResult = await googleSignIn();
             
             if (googleAuthResult.success) {
                 const registerResult = await registerApi.googleRegister(googleAuthResult.userData);

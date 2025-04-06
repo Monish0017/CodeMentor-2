@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { signInWithGoogle, handleWebGoogleSignIn } from '../../utils/googleAuth';
+import { useGoogleAuth } from '../../utils/clerkAuth';
+import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-expo';
 
 // Server URL configuration - using environment variables
 const SERVERURL = Constants.expoConfig?.extra?.API_URL || 'http://192.168.175.234:5000';
@@ -53,6 +54,19 @@ const LoginScreen = ({ navigation }) => {
     const [errorMsg, setErrorMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { signIn } = useAuth();
+    const { googleSignIn } = useGoogleAuth();
+    const { user: clerkUser } = useUser();
+    const { signOut: clerkSignOut } = useClerkAuth();
+
+    useEffect(() => {
+        const checkExistingSession = async () => {
+            if (clerkUser) {
+                console.log("Active Clerk session detected:", clerkUser.id);
+            }
+        };
+        
+        checkExistingSession();
+    }, [clerkUser]);
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -90,11 +104,11 @@ const LoginScreen = ({ navigation }) => {
             setErrorMsg('');
             setIsLoading(true);
             
-            let googleAuthResult;
+            if (clerkUser) {
+                await clerkSignOut();
+            }
             
-            // Use signInWithGoogle for all platforms
-            // It will internally use handleWebGoogleSignIn for web
-            googleAuthResult = await signInWithGoogle();
+            const googleAuthResult = await googleSignIn();
             
             if (googleAuthResult.success) {
                 const loginResult = await loginApi.googleLogin(googleAuthResult.userData);
@@ -118,6 +132,12 @@ const LoginScreen = ({ navigation }) => {
                     setErrorMsg(loginResult.error);
                 }
             } else {
+                if (googleAuthResult.needsSignUp) {
+                    navigation.navigate('Register', { 
+                        googleAuthPending: true
+                    });
+                    return;
+                }
                 setErrorMsg(googleAuthResult.error);
             }
         } catch (err) {
